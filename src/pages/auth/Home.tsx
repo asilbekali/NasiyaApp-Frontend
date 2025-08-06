@@ -28,19 +28,19 @@ const Login = () => {
 
         if (statusCode === 201) {
           const accessToken = response.data.accesToken;
-          // Tokenni localStorage va cookie ga saqlash
+
+          // Token saqlash
           localStorage.setItem("accessToken", accessToken);
           document.cookie = `accessToken=${accessToken}; path=/; max-age=86400`;
 
-          // Tasdiqlash toast (✅)
+          // ✅ Tasdiqlovchi toast
           message.success("Tizimga muvaffaqiyatli kirdingiz! ✅");
+
+          // /home page ga redirect
           navigate("/home");
         } else if (statusCode >= 200 && statusCode < 300) {
-          // 2xx boshqa holatlar (200, 204)
-          message.success("Muvaffaqiyatli bajarildi!");
-        } else {
-          // Agar boshqa status qaytsa (lekin 2xx emas)
-          message.warning("Noma'lum javob qaytdi.");
+          // Boshqa barcha 2xx kodlar uchun faqat success toast chiqadi, status ko'rsatilmaydi
+          message.success("Amal muvaffaqiyatli bajarildi!");
         }
 
       } catch (error: any) {
