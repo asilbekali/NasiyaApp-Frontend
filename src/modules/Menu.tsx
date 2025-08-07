@@ -1,7 +1,10 @@
+import BottomNavigation from "../components/BottomNavigation"
 
 const Menu = () => {
   return (
-    <div>Menu</div>
+    <>
+      <BottomNavigation />
+    </>
   )
 }
 

@@ -1,16 +1,21 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Logo } from "../../assets/images";
 import Heading from "../../components/Heading";
 import Text from "../../components/Text";
-import { Button, Input, message } from "antd";
+import { Button, Input } from "antd";
 import { LoginIcon, PasswordIcon } from "../../assets/icons";
 import { useFormik } from "formik";
 import { LoginSchema } from "../../validation/Login";
 import { useState } from "react";
 import axios from "axios";
+import { useCookies } from "react-cookie";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Login = () => {
   const [isPenning, setPenning] = useState(false);
+  const [, setCookie] = useCookies(["token"]);
+  const navigate = useNavigate();
 
   const { values, errors, handleBlur, handleChange, handleSubmit, touched } = useFormik({
     initialValues: { username: "", password: "" },
@@ -25,32 +30,38 @@ const Login = () => {
 
         const statusCode = response.status;
 
-        if (statusCode === 200) {
-          message.success("Muvaffaqiyatli tizimga kirdingiz!");
-          console.log('Success:', response.data);
-          // token saqlash yoki redirect qilishni shu yerda qilasiz
+        if (statusCode === 200 || statusCode === 201) {
+          // Token saqlash (token nomini backendga qarab o‘zgartiring)
+          const token = response.data?.accesToken;
+
+          if (token) {
+            setCookie("token", token, { path: "/", maxAge: 60 * 60 * 24 }); // 1 kun
+          }
+
+          toast.success("Muvaffaqiyatli tizimga kirdingiz!");
+          navigate("/"); // Sahifani o'zgartirish
         } else {
-          message.warning(`Status: ${statusCode} - Noma'lum javob`);
+          toast.warning(`Status: ${statusCode} - Noma'lum javob`);
         }
 
       } catch (error: any) {
         if (error.response) {
           const statusCode = error.response.status;
           if (statusCode === 400) {
-            message.error("Login yoki parol noto‘g‘ri!");
+            toast.error("Login yoki parol noto‘g‘ri!");
           } else if (statusCode === 401) {
-            message.error("Ruxsat etilmagan foydalanuvchi!");
+            toast.error("Ruxsat etilmagan foydalanuvchi!");
           } else if (statusCode === 403) {
-            message.error("Tizimga kirish taqiqlangan!");
+            toast.error("Tizimga kirish taqiqlangan!");
           } else if (statusCode === 404) {
-            message.error("Foydalanuvchi topilmadi!");
+            toast.error("Foydalanuvchi topilmadi!");
           } else if (statusCode >= 500) {
-            message.error("Serverda xatolik yuz berdi!");
+            toast.error("Serverda xatolik yuz berdi!");
           } else {
-            message.error(`Xatolik: ${statusCode}`);
+            toast.error(`Xatolik: ${statusCode}`);
           }
         } else {
-          message.error("Tarmoqda muammo bor yoki server ishlamayapti.");
+          toast.error("Tarmoqda muammo bor yoki server ishlamayapti.");
         }
         console.error('Login failed:', error.response ? error.response.data : error.message);
       } finally {

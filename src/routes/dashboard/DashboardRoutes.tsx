@@ -1,16 +1,21 @@
 import { Route, Routes } from "react-router-dom"
-import { PATH } from "../../hooks/Path"
-import { Home } from "../../pages"
-import DashboardLayout from "../../provider/DashboardLayout"
+import type { DashboardRouteType } from "../../types/DashboardRouteType"
+import { DashboardRouteList } from "../../hooks/Path"
+import { Menu } from "../../modules"
 
-const DashboardRoutes = () => {
+const DashboardRoute = () => {
   return (
-    <DashboardLayout>
-      <Routes>
-        <Route path={PATH.main} element={<Home />} />
-      </Routes>
-    </DashboardLayout>
+    <div className="min-h-screen bg-gray-50">
+      <div className="pb-20"> {/* Add padding bottom for fixed navigation */}
+        <Routes>
+          {DashboardRouteList.map((item: DashboardRouteType) =>
+            <Route key={item.id} path={item.path} element={item.element} />
+          )}
+        </Routes>
+      </div>
+      <Menu />
+    </div>
   )
 }
 
-export default DashboardRoutes
+export default DashboardRoute
