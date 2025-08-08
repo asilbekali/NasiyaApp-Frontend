@@ -4,30 +4,44 @@ import { CalendarIcon, Eye, Plus, Wallet, TrendingUp, Users, AlertCircle } from 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useCookies } from 'react-cookie';
-import PaymentTopUp from '../../components/PaymentTopUp';
-import Calendar from '../../components/Calendar';
 import { jwtDecode } from '../../hooks/jwt';
-import { fetchlateDebtors, fetchMonthTotal, fetchSellerData } from '../../service/use-login';
+import { fetchAllCustomers, fetchingAllDEbtsTotal, fetchlateDebtors, fetchMonthTotal, fetchSeller } from '../../service/use-login';
+import Calendar from '../../components/Calendar';
+import PaymentTopUp from '../../components/PaymentTopUp';
 
-interface SellerData {
-  id: number;
-  login: string;
-  name: string;
-  wallet: number;
-  // ... other seller properties
-}
+
+
 
 interface MonthlyTotalData {
   sellerId: number;
   thisMonthDebtorsCount: number;
   thisMonthTotalAmount: number;
-  debtors: any[]; // Define a proper type if needed
+  debtors: any[];
 }
 
-interface LateDebtorsData { // Corrected interface name to match variable
+interface LateDebtorsData {
   sellerId: number;
   lateDebtorsCount: number;
-  lateDebtors: any[]; // Define a proper type if needed
+  lateDebtors: any[];
+}
+
+type allDebtorsCount = number; // Corrected: fetchAllCustomers returns a number directly
+
+
+type totalDebtPrice = number
+
+
+export interface Seller {
+  id: number;
+  name: string;
+  password: string;
+  phoneNumber: string;
+  email: string;
+  wallet: number;
+  image: string;
+  status: boolean;
+  role: string;
+  createAt: string;
 }
 
 const Home = () => {
@@ -46,28 +60,47 @@ const Home = () => {
     }
   }
 
+
+
+  const { data: seller, isLoading: isLoadingSeller, error: errorSeller } = useQuery<Seller>({
+    queryKey: ['seller'],
+    queryFn: fetchSeller,
+    enabled: !!token
+  });
+
+
+
+
+
+
   // Fetch Monthly Total
-  const { data: monthTotal, isLoading: isLoadingMonthTotal, error: errorMonthTotal } = useQuery<MonthlyTotalData>({
+  const { isLoading: isLoadingMonthTotal, error: errorMonthTotal } = useQuery<MonthlyTotalData>({
     queryKey: ['monthTotal'],
     queryFn: fetchMonthTotal,
     enabled: !!token, // Only fetch if token exists
   });
 
+  const { data: totalDebtData } = useQuery<totalDebtPrice>({
+    queryKey: ['allTotalDebt'],
+    queryFn: fetchingAllDEbtsTotal,
+    enabled: !!token
+  });
+
+
+
   // Fetch Late Customers count
-  const { data: lateDebtors, isLoading: isLoadinglateDebtors, error: errorlateDebtors } = useQuery<LateDebtorsData>({ // Used LateDebtorsData interface
+  const { data: lateDebtors, isLoading: isLoadinglateDebtors, error: errorlateDebtors } = useQuery<LateDebtorsData>({
     queryKey: ['lateDebtorsCount'],
     queryFn: fetchlateDebtors,
     enabled: !!token, // Only fetch if token exists
   });
 
-  // Fetch Seller Data (for wallet)
-  const { data: sellerData, isLoading: isLoadingSellerData, error: errorSellerData } = useQuery<SellerData>({
-    queryKey: ['sellerData', sellerId],
-    queryFn: () => fetchSellerData(sellerId!),
-    enabled: !!sellerId, 
+  // Fetch All Customers count
+  const { data: allCustomersCount, isLoading: isLoadingAllCustomersCount, error: errorAllCustomersCount } = useQuery<allDebtorsCount>({
+    queryKey: ['allDebtorsCount'],
+    queryFn: fetchAllCustomers,
+    enabled: !!token
   });
-
-  console.log(sellerId);
 
 
   if (showCalendar) {
@@ -86,14 +119,14 @@ const Home = () => {
           <div className="flex items-center gap-3">
             <div className="relative">
               <img
-                src="https://i.pravatar.cc/40"
+                src={isLoadingSeller ? 'Yuklanmoqda...' : errorSeller ? 'Xato' : `${seller?.image}`}
                 alt="User avatar"
                 className="w-12 h-12 rounded-full border-2 border-white shadow-md"
               />
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
             </div>
             <div>
-              <div className="font-bold text-gray-800 text-lg">Testuchun</div>
+              <div className="font-bold text-gray-800 text-lg"> {isLoadingSeller ? 'Yuklanmoqda...' : errorSeller ? 'Xato' : `${seller?.name}`}</div>
               <div className="text-sm text-gray-500">Xush kelibsiz!</div>
             </div>
           </div>
@@ -109,7 +142,7 @@ const Home = () => {
         <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl p-6 shadow-lg">
           <div className="text-center">
             <div className="text-3xl font-bold mb-2">
-              {isLoadingMonthTotal ? 'Yuklanmoqda...' : errorMonthTotal ? 'Xato' : `${monthTotal?.thisMonthTotalAmount?.toLocaleString('uz-UZ')} so'm`}
+              {isLoadingMonthTotal ? 'Yuklanmoqda...' : errorMonthTotal ? 'Xato' : `${totalDebtData?.toLocaleString('uz-UZ')} so'm`}
             </div>
             <div className="flex items-center justify-center gap-2 text-emerald-100">
               <span className="text-sm font-medium">Umumiy nasiya</span>
@@ -148,7 +181,7 @@ const Home = () => {
               <div className="text-sm text-gray-600 font-medium">Mijozlar</div>
             </div>
             <div className="text-2xl font-bold text-blue-600">
-              {isLoadingMonthTotal ? '...' : errorMonthTotal ? 'Xato' : monthTotal?.thisMonthDebtorsCount}
+              {isLoadingAllCustomersCount ? '...' : errorAllCustomersCount ? 'Xato' : allCustomersCount} {/* Corrected: Displaying count directly */}
             </div>
             <div className="text-xs text-gray-500 mt-1">faol mijoz</div>
           </div>
@@ -167,7 +200,7 @@ const Home = () => {
             <div className="flex-1">
               <div className="text-sm text-gray-500 mb-1">Hisobingizda</div>
               <div className="text-2xl font-bold text-gray-800">
-                {isLoadingSellerData ? 'Yuklanmoqda...' : errorSellerData ? 'Xato' : `${sellerData?.wallet?.toLocaleString('uz-UZ')} so'm`}
+                {isLoadingSeller ? 'Yuklanmoqda...' : errorSeller ? 'Xato' : `${seller?.wallet?.toLocaleString('uz-UZ')} so'm`}
               </div>
             </div>
             <button

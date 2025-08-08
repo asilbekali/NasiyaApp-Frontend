@@ -4,7 +4,8 @@ import { instance } from "../hooks/instance";
 
 const loginRequest = async (data: { login: string; password: string }) => {
     const response = await instance().post("/seller/login", data);
-    return response.data;
+    // Assuming accessToken is nested under 'data' key in the response
+    return response.data.data;
 };
 
 export const useLogin = () => {
@@ -25,14 +26,6 @@ export const useLogin = () => {
     });
 };
 
-// New query for fetching seller data by ID
-export const fetchSellerData = async (sellerId: number) => {
-    const response = await instance().get(`/seller/${sellerId}`);
-    console.log(response);
-    
-    return response.data;
-};
-
 // New query for fetching monthly total
 export const fetchMonthTotal = async () => {
     const response = await instance().get("/seller/month-total");
@@ -50,4 +43,14 @@ export const fetchAllCustomers = async () => {
     const response = await instance().get("/debtor");
     // Assuming response.data is an array of debtors, return its length
     return response.data.length;
+};
+
+export const fetchingAllDEbtsTotal = async () => {
+    const response = await instance().get("/seller/all-total-debt-price");
+    return response.data.totalDebtPrice;
+};
+
+export const fetchSeller = async () => {
+    const response = await instance().get("/seller/dates");
+    return response.data;
 };

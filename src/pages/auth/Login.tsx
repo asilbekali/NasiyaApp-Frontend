@@ -31,15 +31,14 @@ const Login = () => {
         const statusCode = response.status;
 
         if (statusCode === 200 || statusCode === 201) {
-          // Token saqlash (token nomini backendga qarab o‘zgartiring)
           const token = response.data?.accesToken;
 
           if (token) {
-            setCookie("token", token, { path: "/", maxAge: 60 * 60 * 24 }); // 1 kun
+            setCookie("token", token, { path: "/", maxAge: 60 * 60 * 24 }); 
           }
 
           toast.success("Muvaffaqiyatli tizimga kirdingiz!");
-          navigate("/"); // Sahifani o'zgartirish
+          navigate("/home"); 
         } else {
           toast.warning(`Status: ${statusCode} - Noma'lum javob`);
         }
