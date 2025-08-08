@@ -10,7 +10,7 @@ interface PaymentData {
 }
 
 const Calendar = ({ onBack }: { onBack: () => void }) => {
-  const [currentMonth, setCurrentMonth] = useState(9); // October (0-indexed)
+  const [currentMonth, setCurrentMonth] = useState(9);
   const [currentYear, setCurrentYear] = useState(2024);
   const [selectedDate, setSelectedDate] = useState(1);
 
@@ -21,7 +21,6 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
 
   const daysOfWeek = ['DU', 'SE', 'CH', 'PA', 'JU', 'SH', 'YA'];
 
-  // Sample payment data with different statuses
   const paymentDates = [1, 8, 15, 22, 29];
   const paymentsForSelectedDate: PaymentData[] = [
     { id: 1, name: 'Avazbek Jahongirov', amount: 'UZS 1 000 000', date: 1, status: 'pending' },
@@ -83,32 +82,29 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
     const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
     const days = [];
 
-    // Empty cells for days before the first day of the month
     for (let i = 0; i < firstDay; i++) {
       days.push(<div key={`empty-${i}`} className="h-14"></div>);
     }
 
-    // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const hasPayment = paymentDates.includes(day);
       const isSelected = day === selectedDate;
-      const isToday = day === new Date().getDate() && 
-                     currentMonth === new Date().getMonth() && 
-                     currentYear === new Date().getFullYear();
+      const isToday = day === new Date().getDate() &&
+        currentMonth === new Date().getMonth() &&
+        currentYear === new Date().getFullYear();
 
       days.push(
         <button
           key={day}
           onClick={() => setSelectedDate(day)}
-          className={`relative h-14 w-full rounded-2xl flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
-            isSelected
-              ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg scale-105'
-              : isToday
+          className={`relative h-14 w-full rounded-2xl flex items-center justify-center text-sm font-semibold transition-all duration-300 ${isSelected
+            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg scale-105'
+            : isToday
               ? 'bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 border-2 border-purple-300'
               : hasPayment
-              ? 'bg-gradient-to-br from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200'
-              : 'hover:bg-gray-100 text-gray-700 hover:scale-105'
-          }`}
+                ? 'bg-gradient-to-br from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200'
+                : 'hover:bg-gray-100 text-gray-700 hover:scale-105'
+            }`}
         >
           {day}
           {hasPayment && !isSelected && (
@@ -130,9 +126,8 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       <div className="bg-white/80 backdrop-blur-md">
-        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200/50">
-          <button 
+          <button
             onClick={onBack}
             className="p-3 hover:bg-gray-100 rounded-2xl transition-all duration-200 hover:scale-105"
           >
@@ -144,7 +139,6 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
           <div className="w-12"></div>
         </div>
 
-        {/* Month Navigation */}
         <div className="flex items-center justify-between p-6">
           <h2 className="text-2xl font-bold text-gray-800">
             {months[currentMonth]}, {currentYear}
@@ -165,7 +159,6 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
           </div>
         </div>
 
-        {/* Monthly Total */}
         <div className="px-6 pb-4">
           <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white">
             <div className="flex items-center justify-between">
@@ -180,9 +173,7 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
           </div>
         </div>
 
-        {/* Calendar Grid */}
         <div className="px-6 pb-6">
-          {/* Days of week header */}
           <div className="grid grid-cols-7 gap-2 mb-4">
             {daysOfWeek.map((day) => (
               <div key={day} className="h-10 flex items-center justify-center">
@@ -193,14 +184,12 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
             ))}
           </div>
 
-          {/* Calendar days */}
           <div className="grid grid-cols-7 gap-2">
             {renderCalendarDays()}
           </div>
         </div>
       </div>
 
-      {/* Payments for selected date */}
       <div className="p-6">
         <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/50">
           <div className="flex items-center gap-3 mb-6">
@@ -211,11 +200,11 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
               {selectedDate} {months[currentMonth]} kuni to'lovlar
             </h3>
           </div>
-          
+
           <div className="space-y-4">
             {paymentsForSelectedDate.map((payment) => (
-              <div 
-                key={payment.id} 
+              <div
+                key={payment.id}
                 className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-200 hover:scale-[1.02] ${getStatusColor(payment.status)}`}
               >
                 <div className="flex items-center gap-4">
@@ -225,13 +214,12 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
                     <div className="text-sm text-gray-600 mt-1">{payment.amount}</div>
                   </div>
                 </div>
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  payment.status === 'completed' ? 'bg-green-200 text-green-800' :
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${payment.status === 'completed' ? 'bg-green-200 text-green-800' :
                   payment.status === 'overdue' ? 'bg-red-200 text-red-800' :
-                  'bg-orange-200 text-orange-800'
-                }`}>
+                    'bg-orange-200 text-orange-800'
+                  }`}>
                   {payment.status === 'completed' ? 'Bajarildi' :
-                   payment.status === 'overdue' ? 'Kechikkan' : 'Kutilmoqda'}
+                    payment.status === 'overdue' ? 'Kechikkan' : 'Kutilmoqda'}
                 </div>
               </div>
             ))}
