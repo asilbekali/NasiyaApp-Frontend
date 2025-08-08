@@ -54,3 +54,8 @@ export const fetchSeller = async () => {
     const response = await instance().get("/seller/dates");
     return response.data;
 };
+
+export const payWallet = async (money: number) => {
+    const response = await instance().post("/seller/payment", { money });
+    return response.data;
+};

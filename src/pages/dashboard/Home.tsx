@@ -2,7 +2,7 @@
 
 import { CalendarIcon, Eye, Plus, Wallet, TrendingUp, Users, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { QueryClient, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCookies } from 'react-cookie';
 import { jwtDecode } from '../../hooks/jwt';
 import { fetchAllCustomers, fetchingAllDEbtsTotal, fetchlateDebtors, fetchMonthTotal, fetchSeller } from '../../service/use-login';
@@ -102,13 +102,19 @@ const Home = () => {
     enabled: !!token
   });
 
+  const queryClient = useQueryClient();
+
+  const handlePaymentSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['seller'] });
+  };
+
 
   if (showCalendar) {
     return <Calendar onBack={() => setShowCalendar(false)} />;
   }
 
   if (showPayment) {
-    return <PaymentTopUp onBack={() => setShowPayment(false)} />;
+    return <PaymentTopUp onBack={() => setShowPayment(false)} onPaymentSuccess={handlePaymentSuccess} />;
   }
 
   return (
