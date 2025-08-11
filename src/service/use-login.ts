@@ -59,3 +59,143 @@ export const payWallet = async (money: number) => {
     const response = await instance().post("/seller/payment", { money });
     return response.data;
 };
+
+// Mijozlar ro'yxatini olish
+export const fetchClients = async () => {
+    const response = await instance().get("/debtor");
+    return response.data; // API'dan to'liq ro'yxat qaytariladi
+};
+
+// Mijoz yaratish
+export const createClient = async (data: {
+    name: string;
+    phoneNumbers: string[];
+    address?: string;
+    note?: string;
+    images?: string[];
+}) => {
+    const response = await instance().post("/debtor", data);
+    return response.data;
+};
+
+// Rasm yuklash (POST)
+export const uploadImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await instance().post("/multer/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    // API to'g'ridan-to'g'ri file manzilini qaytarsa, uni to'liq URL bilan qaytaramiz
+    if (response.data?.url) {
+        return {
+            url: `http://18.159.45.32/${response.data.url}`,
+            path: response.data.url, // agar keyinchalik path kerak bo'lsa
+        };
+    }
+    return response.data;
+};
+
+// Rasmni GET qilish (yuklangan fayl manzili orqali)
+export const getUploadedFile = async (filePath: string) => {
+    const response = await instance().get(`/multer/${filePath}`, {
+        responseType: "blob",
+    });
+    return response.data; // Bu blob qaytaradi
+};
+
+// Debtor ma'lumotlarini ID bo'yicha olish
+export const fetchDebtorById = async (id: number) => {
+    const response = await instance().get(`/debtor/${id}`);
+    return response.data;
+};
+
+// Borrowed Product ma'lumotlarini ID bo'yicha olish
+export const fetchBorrowedProductById = async (id: number) => {
+    const response = await instance().get(`/borrowed-product/${id}`);
+    return response.data;
+};
+
+// Interfaces for TypeScript
+export interface CreateClientRequest {
+  name: string;
+  phoneNumbers: string[];
+  address?: string;
+  note?: string;
+  images?: string[];
+}
+
+export interface CreateClientResponse {
+  id: string;
+  name: string;
+  phoneNumbers: string[];
+  address: string;
+  note: string;
+  images: string[];
+  createdAt: string;
+}
+
+export interface UploadImageResponse {
+  url: string;
+  path?: string;
+}
+
+export interface Debtor {
+  id: number;
+  name: string;
+  address: string;
+  note: string;
+  role: string;
+  createAt: string;
+  sellerId: number;
+  debtor_image: Array<{
+    id: number;
+    image: string;
+    createAt: string;
+    debtorId: number;
+  }>;
+  debtroPhoneNumber: Array<{
+    id: number;
+    number: string;
+    debtorId: number;
+    createAt: string;
+  }>;
+  borrowedProduct: Array<{
+    id: number;
+    productName: string;
+    term: string;
+    totalAmount: number;
+    note: string;
+    debtorId: number;
+    monthPayment: number;
+    createAt: string;
+  }>;
+}
+
+export interface BorrowedProduct {
+  id: number;
+  productName: string;
+  term: string;
+  totalAmount: number;
+  note: string;
+  debtorId: number;
+  monthPayment: number;
+  createAt: string;
+  debtor: {
+    id: number;
+    name: string;
+    address: string;
+    note: string;
+    role: string;
+    createAt: string;
+    sellerId: number;
+  };
+  borrowedProductImage: Array<{
+    id: number;
+    image: string;
+    borrowedProductId: number;
+    createAt: string;
+  }>;
+  paymentHistory: any[];
+}
