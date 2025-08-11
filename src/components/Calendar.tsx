@@ -4,12 +4,40 @@ import { ChevronLeft, ChevronRight, ArrowLeft, TrendingUp, Clock, CheckCircle } 
 import { useState, useMemo } from "react"
 import { useCalendarData } from "../hooks/calendar-date"
 
+interface BorrowedProduct {
+  monthPayment: number
+  createAt: string
+  totalAmount: number
+}
+
+interface Debtor {
+  id: number
+  name: string
+  phoneNumbers: string[]
+  totalDebt: number
+  borrowedProducts: BorrowedProduct[]
+}
+
+interface PaymentDate {
+  debtorId: number
+  paymentDay: string
+}
+
+interface MonthTotal {
+  sellerId: number
+  thisMonthDebtorsCount: number
+  thisMonthTotalAmount: number
+  paymentDate: PaymentDate[]
+  debtors: Debtor[]
+}
+
 interface PaymentData {
   id: number
   name: string
   amount: string
-  date: number // This will be the selectedDate for display purposes
+  date: string
   status: "pending" | "completed" | "overdue"
+  paymentKey: string
 }
 
 const Calendar = ({ onBack }: { onBack: () => void }) => {
@@ -20,34 +48,23 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
   const { data, isLoading, isError, error } = useCalendarData()
 
   const months = [
-    "Yanvar",
-    "Fevral",
-    "Mart",
-    "Aprel",
-    "May",
-    "Iyun",
-    "Iyul",
-    "Avgust",
-    "Sentabr",
-    "Oktabr",
-    "Noyabr",
-    "Dekabr",
+    "Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun",
+    "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr",
   ]
   const daysOfWeek = ["DU", "SE", "CH", "PA", "JU", "SH", "YA"]
 
-  // Hardcoded payment dates for visual marking on the calendar grid
-  // The actual list of payments below the calendar will be derived from fetched data
-  const paymentDates = [1, 8, 15, 22, 29]
-
+  // Oy kunlari soni
   const getDaysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate()
   }
 
+  // Oy birinchi kunining haftadagi indeksi (dushanba = 0)
   const getFirstDayOfMonth = (month: number, year: number) => {
     const firstDay = new Date(year, month, 1).getDay()
-    return firstDay === 0 ? 6 : firstDay - 1 // Adjust for Monday start (0=Sunday, 1=Monday, ..., 6=Saturday)
+    return firstDay === 0 ? 6 : firstDay - 1
   }
 
+  // Oy o‘zgartirish
   const navigateMonth = (direction: "prev" | "next") => {
     if (direction === "prev") {
       if (currentMonth === 0) {
@@ -66,79 +83,85 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
     }
   }
 
+  // Status iconlari
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
         return <CheckCircle size={16} className="text-green-500" />
       case "overdue":
         return <Clock size={16} className="text-red-500" />
-      default: // pending
+      default:
         return <Clock size={16} className="text-orange-500" />
     }
   }
 
+  // Status ranglari
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
         return "bg-green-50 border-green-200"
       case "overdue":
         return "bg-red-50 border-red-200"
-      default: // pending
+      default:
         return "bg-orange-50 border-orange-200"
     }
   }
 
-  // Simulate payments for the selected date based on fetched debtors
+  // Tanlangan sanaga mos to'lovlarni olish
   const paymentsForSelectedDate: PaymentData[] = useMemo(() => {
     if (!data) return []
 
-    const allPayments: PaymentData[] = []
+    const monthTotal: MonthTotal = data.monthTotal
 
-    // Add debtors from monthTotal as 'pending' payments
-    data.monthTotal.debtors.forEach((debtor) => {
-      allPayments.push({
+    // YYYY-MM-DD format
+    const selectedDateStr = new Date(currentYear, currentMonth, selectedDate)
+      .toISOString()
+      .slice(0, 10)
+
+    const payments: PaymentData[] = []
+
+    monthTotal.paymentDate.forEach((pd, idx) => {
+      // Faqat tanlangan sana uchun
+      if (pd.paymentDay.slice(0, 10) !== selectedDateStr) return
+
+      const debtor = monthTotal.debtors.find(d => d.id === pd.debtorId)
+      if (!debtor) return
+
+      // borrowedProducts ichidan paymentDay bilan to'liq mos keladigan elementni topamiz
+      const matchedProduct = debtor.borrowedProducts.find(bp => bp.createAt === pd.paymentDay)
+
+      const amount = matchedProduct ? matchedProduct.monthPayment : debtor.totalDebt
+
+      payments.push({
         id: debtor.id,
         name: debtor.name,
-        amount: `UZS ${(debtor.totalDebt ?? 0).toLocaleString("uz-UZ")}`, // Added ?? 0
-        date: selectedDate,
+        amount: `UZS ${amount.toLocaleString("uz-UZ")}`,
+        date: pd.paymentDay,
         status: "pending",
+        paymentKey: `${debtor.id}-${pd.paymentDay}-${idx}`, // noyob kalit
       })
     })
 
-    // Add late debtors as 'overdue' payments
-    data.lateCustomers.lateDebtors.forEach((debtor) => {
-      // Avoid duplicates if a debtor is both in monthTotal and lateCustomers
-      if (!allPayments.some((p) => p.id === debtor.id)) {
-        allPayments.push({
-          id: debtor.id,
-          name: debtor.name,
-          amount: `UZS ${(debtor.totalDebt ?? 0).toLocaleString("uz-UZ")}`, // Added ?? 0
-          date: selectedDate,
-          status: "overdue",
-        })
-      } else {
-        // If already present, update status to overdue if it was pending
-        const existingPayment = allPayments.find((p) => p.id === debtor.id)
-        if (existingPayment && existingPayment.status === "pending") {
-          existingPayment.status = "overdue"
-        }
-      }
-    })
+    return payments
+  }, [data, selectedDate, currentMonth, currentYear])
 
-    return allPayments
-  }, [data, selectedDate])
-
+  // Kalendardagi kunlarni yaratish
   const renderCalendarDays = () => {
     const daysInMonth = getDaysInMonth(currentMonth, currentYear)
     const firstDay = getFirstDayOfMonth(currentMonth, currentYear)
     const days = []
 
+    // Bo'sh joylar
     for (let i = 0; i < firstDay; i++) {
       days.push(<div key={`empty-${i}`} className="h-14"></div>)
     }
 
+    // Oy kunlari
     for (let day = 1; day <= daysInMonth; day++) {
-      const hasPayment = paymentDates.includes(day) // Still using hardcoded for visual
+      const dateStr = new Date(currentYear, currentMonth, day).toISOString().slice(0, 10)
+
+      const hasPayment = data?.monthTotal?.paymentDate.some(pd => pd.paymentDay.slice(0, 10) === dateStr) || false
+
       const isSelected = day === selectedDate
       const isToday =
         day === new Date().getDate() &&
@@ -171,6 +194,7 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
         </button>,
       )
     }
+
     return days
   }
 
@@ -243,7 +267,7 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
         </div>
         <div className="px-6 pb-6">
           <div className="grid grid-cols-7 gap-2 mb-4">
-            {daysOfWeek.map((day) => (
+            {daysOfWeek.map(day => (
               <div key={day} className="h-10 flex items-center justify-center">
                 <span className="text-sm font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-lg">{day}</span>
               </div>
@@ -252,6 +276,7 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
           <div className="grid grid-cols-7 gap-2">{renderCalendarDays()}</div>
         </div>
       </div>
+
       <div className="p-6">
         <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/50">
           <div className="flex items-center gap-3 mb-6">
@@ -264,9 +289,9 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
           </div>
           <div className="space-y-4">
             {paymentsForSelectedDate.length > 0 ? (
-              paymentsForSelectedDate.map((payment) => (
+              paymentsForSelectedDate.map(payment => (
                 <div
-                  key={payment.id}
+                  key={payment.paymentKey}
                   className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-200 hover:scale-[1.02] ${getStatusColor(payment.status)}`}
                 >
                   <div className="flex items-center gap-4">
