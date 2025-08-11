@@ -65,9 +65,30 @@ export default function DebtorAbout() {
 
       {/* Mijoz ma’lumotlari */}
       <div className="bg-gray-100 rounded-lg p-4 mb-4">
-        <p><strong>Telefon:</strong> {debtor.debtroPhoneNumber.map(ph => ph.number).join(", ")}</p>
-        <p><strong>Manzil:</strong> {debtor.address || "Kiritilmagan"}</p>
-        <p><strong>Izoh:</strong> {debtor.note || "Yo‘q"}</p>
+        <p>
+          <strong>Telefon:</strong>{" "}
+          {debtor.debtroPhoneNumber.map((ph) => ph.number).join(", ")}
+        </p>
+        <p>
+          <strong>Manzil:</strong> {debtor.address || "Kiritilmagan"}
+        </p>
+        <p>
+          <strong>Izoh:</strong> {debtor.note || "Yo‘q"}
+        </p>
+
+        {/* Rasm(lar) */}
+        {debtor.debtor_image.length > 0 && (
+          <div className="flex gap-2 mt-4 overflow-x-auto">
+            {debtor.debtor_image.map((img) => (
+              <img
+                key={img.id}
+                src={img.image}
+                alt={`Debtor image ${img.id}`}
+                className="w-24 h-24 object-cover rounded-lg border"
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Umumiy qarz */}
@@ -147,7 +168,10 @@ export default function DebtorAbout() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <p className="mb-6">Bu mijoz va unga tegishli barcha ma’lumotlarni o‘chirishni xohlaysizmi?</p>
+              <p className="mb-6">
+                Bu mijoz va unga tegishli barcha ma’lumotlarni o‘chirishni
+                xohlaysizmi?
+              </p>
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setIsModalOpen(false)}
