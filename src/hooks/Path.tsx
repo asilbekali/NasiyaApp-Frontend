@@ -1,5 +1,6 @@
 import { Home } from "../pages"
 import BorrowedProductabout from "../pages/dashboard/BorrowedProductabout"
+import BorrowedProductCreate from "../pages/dashboard/BorrowedProductCreate"
 import Clients from "../pages/dashboard/clicts"
 import CreateClient from "../pages/dashboard/CreateClient"
 import DebtorAbout from "../pages/dashboard/debtorAbout"
@@ -11,7 +12,8 @@ export const PATH = {
     clients: "/clients",
     createClient: "/createClient",
     debtor: "/debtor/:id",
-    borrrowedProduct: "/borrowed-product/:id"
+    borrrowedProduct: "/borrowed-product/:id",
+    createBorrowedProduct: "/borrowed-product/create"
 }
 
 export const DashboardRouteList = [
@@ -39,5 +41,10 @@ export const DashboardRouteList = [
         id: 5,
         path: PATH.borrrowedProduct,
         element: <BorrowedProductabout />
+    },
+    {
+        id: 6,
+        path: PATH.createBorrowedProduct,
+        element: <BorrowedProductCreate />
     }
 ]
