@@ -77,9 +77,10 @@ const BorrowedProductAbout: React.FC = () => {
         note: data.note || "",
       })
 
+      const phoneNumbers = data.debtor?.debtroPhoneNumber?.map((p: any) => (typeof p === "string" ? p : p.number)) || [""]
       setDebtorEditForm({
         name: data.debtor?.name || "",
-        phoneNumbers: [""],
+        phoneNumbers: phoneNumbers.length > 0 ? phoneNumbers : [""],
         address: data.debtor?.address || "",
         note: data.debtor?.note || "",
       })
@@ -470,7 +471,7 @@ const BorrowedProductAbout: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden"
+          className="bg-white/90 backdrop-blur-sm  rounded-2xl shadow-xl border border-white/20 overflow-hidden"
         >
           <div className="bg-gradient-to-r from-green-600 to-teal-600 p-6 text-white">
             <div className="flex items-center justify-between">
@@ -501,10 +502,10 @@ const BorrowedProductAbout: React.FC = () => {
                     setIsEditingDebtor(true)
                   }
                 }}
-                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
+                className="flex ml-[2px] items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 mt-[30px] ml-[5px] rounded-lg transition-colors"
               >
                 {isEditingDebtor ? <Save className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
-                {isEditingDebtor ? "Saqlash" : "Tahrirlash"}
+                {isEditingDebtor ? "" : "Tahrirlash"}
               </button>
             </div>
           </div>
@@ -546,9 +547,23 @@ const BorrowedProductAbout: React.FC = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Phone className="w-4 h-4 text-gray-500" />
-                    <span className="text-gray-500">Telefon raqam mavjud emas</span>
+                  <div className="space-y-2">
+                    {data?.debtor?.debtroPhoneNumber && data.debtor.debtroPhoneNumber.length > 0 ? (
+                      data.debtor.debtroPhoneNumber.map((phoneData: any, index: any) => {
+                        const phoneNumber = typeof phoneData === "string" ? phoneData : phoneData.number
+                        return (
+                          <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            <Phone className="w-4 h-4 text-gray-500" />
+                            <span className="text-gray-700 font-medium">{phoneNumber}</span>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <Phone className="w-4 h-4 text-gray-500" />
+                        <span className="text-gray-500">Telefon raqam mavjud emas</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

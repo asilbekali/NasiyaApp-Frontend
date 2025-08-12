@@ -182,15 +182,7 @@ export interface BorrowedProduct {
     debtorId: number;
     monthPayment: number;
     createAt: string;
-    debtor: {
-        id: number;
-        name: string;
-        address: string;
-        note: string;
-        role: string;
-        createAt: string;
-        sellerId: number;
-    };
+    debtor: Debtor;
     borrowedProductImage: Array<{
         id: number;
         image: string;

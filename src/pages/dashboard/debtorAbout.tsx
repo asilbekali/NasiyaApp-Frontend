@@ -26,6 +26,9 @@ export default function DebtorAbout() {
     enabled: !!id,
   })
 
+
+
+
   // Debtorni o'chirish mutatsiyasi
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -39,12 +42,16 @@ export default function DebtorAbout() {
     },
   })
 
+
   const handleDelete = () => {
     deleteMutation.mutate()
     setIsModalOpen(false)
   }
 
   const totalDebt = debtor?.borrowedProduct.reduce((sum, p) => sum + (p.totalAmount || 0), 0) || 0
+
+
+
 
   if (isLoading) {
     return (
@@ -192,9 +199,8 @@ export default function DebtorAbout() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className={`bg-gradient-to-r ${
-                      isOverdue ? "from-red-50 to-red-100 border-red-200" : "from-green-50 to-blue-50 border-blue-200"
-                    } border rounded-lg sm:rounded-xl p-3 sm:p-4 cursor-pointer hover:shadow-md transition-all duration-200 touch-manipulation`}
+                    className={`bg-gradient-to-r ${isOverdue ? "from-red-50 to-red-100 border-red-200" : "from-green-50 to-blue-50 border-blue-200"
+                      } border rounded-lg sm:rounded-xl p-3 sm:p-4 cursor-pointer hover:shadow-md transition-all duration-200 touch-manipulation`}
                     onClick={() => navigate(`/borrowed-product/${loan.id}`)}
                   >
                     <div className="flex justify-between items-start mb-2 sm:mb-3">
@@ -219,9 +225,8 @@ export default function DebtorAbout() {
 
                     <div className="flex justify-between items-center text-xs sm:text-sm">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          isOverdue ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
-                        }`}
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${isOverdue ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+                          }`}
                       >
                         {isOverdue ? "Muddati o'tgan" : "Faol"}
                       </span>
