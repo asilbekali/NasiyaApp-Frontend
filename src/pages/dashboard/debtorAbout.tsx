@@ -253,10 +253,10 @@ export default function DebtorAbout() {
         animate={{ scale: 1 }}
         transition={{ delay: 0.5, type: "spring" }}
         onClick={() => navigate(`/borrowed-product/create?debtorId=${debtor.id}`)}
-        className="fixed bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-full shadow-xl flex items-center gap-2 hover:shadow-2xl hover:scale-105 transition-all duration-200 touch-manipulation text-sm sm:text-base"
+        className="fixed mb-[8px] bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-full shadow-xl flex items-center gap-2 hover:shadow-2xl hover:scale-105 transition-all duration-5 touch-manipulation text-sm sm:text-base"
       >
         <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-        <span className="font-semibold">Nasiya yaratish</span>
+        <span className="font-semibold ">Nasiya yaratish</span>
       </motion.button>
 
       {/* Image Modal */}
