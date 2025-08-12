@@ -1,119 +1,132 @@
-"use client";
+"use client"
 
-import type React from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-    ArrowLeft,
-    Package,
-    Calendar,
-    DollarSign,
-    FileText,
-    Plus,
-    Loader2,
-    Upload,
-    X,
-    ImageIcon,
-} from "lucide-react";
-import { createBorrowedProduct, uploadImage } from "../../service/use-login";
+import type React from "react"
+import { useSearchParams, useNavigate } from "react-router-dom"
+import { useMutation } from "@tanstack/react-query"
+import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { ArrowLeft, Package, Calendar, DollarSign, FileText, Plus, Loader2, Upload, X, ImageIcon } from "lucide-react"
+import { createBorrowedProduct, uploadImage } from "../../service/use-login"
 
 export default function BorrowedProductCreate() {
-    const [searchParams] = useSearchParams();
-    const debtorId = Number(searchParams.get("debtorId"));
-    const navigate = useNavigate();
+    const [searchParams] = useSearchParams()
+    const debtorId = Number(searchParams.get("debtorId"))
+    const navigate = useNavigate()
 
     const [form, setForm] = useState({
         productName: "",
         term: "",
         totalAmount: "",
         note: "",
-    });
+    })
 
-    const [images, setImages] = useState<string[]>([]);
-    const [uploadingImages, setUploadingImages] = useState<File[]>([]);
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [images, setImages] = useState<string[]>([])
+    const [uploadingImages, setUploadingImages] = useState<File[]>([])
+    const [errors, setErrors] = useState<Record<string, string>>({})
 
     const uploadMutation = useMutation({
         mutationFn: uploadImage,
         onSuccess: (data) => {
-            const imageUrl = `http://18.159.45.32/multer/${data.path}`;
-            setImages((prev) => [...prev, imageUrl]);
+            const imageUrl = `http://18.159.45.32/multer/${data.path}`
+            setImages((prev) => [...prev, imageUrl])
         },
         onError: (error) => {
-            console.error("Rasm yuklashda xatolik:", error);
+            console.error("Rasm yuklashda xatolik:", error)
         },
-    });
+    })
 
     const createMutation = useMutation({
         mutationFn: async () => {
-            return await createBorrowedProduct({
-                productName: form.productName,
-                term: new Date(form.term).toISOString(),
-                totalAmount: Number(form.totalAmount), // API’da number jo‘natiladi
-                note: form.note,
-                debtorId,
-                images,
-            });
+            const termDate = new Date(form.term)
+            if (isNaN(termDate.getTime())) {
+                throw new Error("Invalid date format")
+            }
+
+            if (!debtorId || isNaN(debtorId)) {
+                throw new Error("Invalid debtor ID")
+            }
+
+            const requestData = {
+                productName: form.productName.trim(),
+                term: termDate.toISOString(),
+                totalAmount: Number(form.totalAmount),
+                note: form.note.trim(),
+                debtorId: debtorId,
+                images: images,
+            }
+
+            console.log("Sending data to API:", requestData)
+
+            return await createBorrowedProduct(requestData)
         },
         onSuccess: () => {
-            navigate(`/debtor/${debtorId}`);
+            navigate(`/debtor/${debtorId}`)
         },
-        onError: (error) => {
-            console.log(error);
-
-            console.error("Nasiya yaratishda xatolik:", error);
+        onError: (error: any) => {
+            console.error("Nasiya yaratishda xatolik:", error)
+            console.error("Error response:", error.response?.data)
+            if (error.response?.status === 400) {
+                console.error("Bad Request - Data validation failed:", error.response.data)
+            }
         },
-    });
+    })
 
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => {
-        const { name, value } = e.target;
-        setForm({ ...form, [name]: value });
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target
+        setForm({ ...form, [name]: value })
 
         if (errors[name]) {
-            setErrors({ ...errors, [name]: "" });
+            setErrors({ ...errors, [name]: "" })
         }
-    };
+    }
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
+        const files = Array.from(e.target.files || [])
         files.forEach((file) => {
-            setUploadingImages((prev) => [...prev, file]);
-            uploadMutation.mutate(file);
-        });
-    };
+            setUploadingImages((prev) => [...prev, file])
+            uploadMutation.mutate(file)
+        })
+    }
 
     const removeImage = (index: number) => {
-        setImages((prev) => prev.filter((_, i) => i !== index));
-    };
+        setImages((prev) => prev.filter((_, i) => i !== index))
+    }
 
     const validateForm = () => {
-        const newErrors: Record<string, string> = {};
+        const newErrors: Record<string, string> = {}
 
         if (!form.productName.trim()) {
-            newErrors.productName = "Mahsulot nomi kiritilishi shart";
+            newErrors.productName = "Mahsulot nomi kiritilishi shart"
         }
 
         if (!form.term) {
-            newErrors.term = "Muddat tanlanishi shart";
+            newErrors.term = "Muddat tanlanishi shart"
+        } else {
+            const termDate = new Date(form.term)
+            if (isNaN(termDate.getTime())) {
+                newErrors.term = "Noto'g'ri sana formati"
+            } else if (termDate <= new Date()) {
+                newErrors.term = "Muddat bugungi kundan keyin bo'lishi kerak"
+            }
         }
 
         if (!form.totalAmount || Number(form.totalAmount) <= 0) {
-            newErrors.totalAmount = "To'g'ri summa kiritilishi shart";
+            newErrors.totalAmount = "To'g'ri summa kiritilishi shart"
         }
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+        if (!debtorId || isNaN(debtorId)) {
+            newErrors.general = "Noto'g'ri mijoz ID"
+        }
+
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
+    }
 
     const handleSubmit = () => {
         if (validateForm()) {
-            createMutation.mutate();
+            createMutation.mutate()
         }
-    };
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -131,12 +144,8 @@ export default function BorrowedProductCreate() {
                             <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-base sm:text-lg font-bold text-gray-800">
-                                Yangi Nasiya
-                            </h1>
-                            <p className="text-xs sm:text-sm text-gray-500">
-                                Nasiya ma'lumotlarini kiriting
-                            </p>
+                            <h1 className="text-base sm:text-lg font-bold text-gray-800">Yangi Nasiya</h1>
+                            <p className="text-xs sm:text-sm text-gray-500">Nasiya ma'lumotlarini kiriting</p>
                         </div>
                     </div>
                 </div>
@@ -163,11 +172,7 @@ export default function BorrowedProductCreate() {
                                 } rounded-lg sm:rounded-xl p-3 sm:p-4 focus:border-blue-500 focus:outline-none transition-colors text-sm sm:text-base`}
                             onChange={handleChange}
                         />
-                        {errors.productName && (
-                            <p className="text-red-500 text-xs sm:text-sm mt-1">
-                                {errors.productName}
-                            </p>
-                        )}
+                        {errors.productName && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.productName}</p>}
                     </div>
 
                     {/* Term Date */}
@@ -185,11 +190,7 @@ export default function BorrowedProductCreate() {
                                 } rounded-lg sm:rounded-xl p-3 sm:p-4 focus:border-blue-500 focus:outline-none transition-colors text-sm sm:text-base`}
                             onChange={handleChange}
                         />
-                        {errors.term && (
-                            <p className="text-red-500 text-xs sm:text-sm mt-1">
-                                {errors.term}
-                            </p>
-                        )}
+                        {errors.term && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.term}</p>}
                     </div>
 
                     {/* Total Amount */}
@@ -207,11 +208,7 @@ export default function BorrowedProductCreate() {
                                 } rounded-lg sm:rounded-xl p-3 sm:p-4 focus:border-blue-500 focus:outline-none transition-colors text-sm sm:text-base`}
                             onChange={handleChange}
                         />
-                        {errors.totalAmount && (
-                            <p className="text-red-500 text-xs sm:text-sm mt-1">
-                                {errors.totalAmount}
-                            </p>
-                        )}
+                        {errors.totalAmount && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.totalAmount}</p>}
                         {form.totalAmount && Number(form.totalAmount) > 0 && (
                             <p className="text-gray-500 text-xs sm:text-sm mt-1">
                                 {Number(form.totalAmount).toLocaleString("uz-UZ")} so'm
@@ -219,7 +216,6 @@ export default function BorrowedProductCreate() {
                         )}
                     </div>
 
-                    {/* Images */}
                     <div>
                         <label className="flex items-center text-gray-700 font-medium mb-2 text-sm sm:text-base">
                             <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-pink-500" />
@@ -237,12 +233,8 @@ export default function BorrowedProductCreate() {
                             />
                             <label htmlFor="image-upload" className="cursor-pointer">
                                 <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-2" />
-                                <p className="text-gray-600 text-sm sm:text-base">
-                                    Rasmlarni yuklash uchun bosing
-                                </p>
-                                <p className="text-xs sm:text-sm text-gray-400 mt-1">
-                                    PNG, JPG, JPEG formatida
-                                </p>
+                                <p className="text-gray-600 text-sm sm:text-base">Rasmlarni yuklash uchun bosing</p>
+                                <p className="text-xs sm:text-sm text-gray-400 mt-1">PNG, JPG, JPEG formatida</p>
                             </label>
                         </div>
 
@@ -275,9 +267,7 @@ export default function BorrowedProductCreate() {
                         {uploadMutation.isPending && (
                             <div className="flex items-center justify-center mt-3 sm:mt-4 text-blue-600">
                                 <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />
-                                <span className="text-sm sm:text-base">
-                                    Rasm yuklanmoqda...
-                                </span>
+                                <span className="text-sm sm:text-base">Rasm yuklanmoqda...</span>
                             </div>
                         )}
                     </div>
@@ -298,7 +288,6 @@ export default function BorrowedProductCreate() {
                         />
                     </div>
 
-                    {/* Submit */}
                     <AnimatePresence>
                         <motion.button
                             initial={{ opacity: 0, y: 10 }}
@@ -329,10 +318,11 @@ export default function BorrowedProductCreate() {
                             <p className="text-red-600 text-center text-sm sm:text-base">
                                 Nasiya yaratishda xatolik yuz berdi. Qaytadan urinib ko'ring.
                             </p>
+                            {errors.general && <p className="text-red-500 text-xs sm:text-sm mt-1 text-center">{errors.general}</p>}
                         </div>
                     )}
                 </motion.div>
             </div>
         </div>
-    );
+    )
 }
