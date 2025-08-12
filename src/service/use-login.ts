@@ -119,49 +119,61 @@ export const fetchBorrowedProductById = async (id: number) => {
 
 // Interfaces for TypeScript
 export interface CreateClientRequest {
-  name: string;
-  phoneNumbers: string[];
-  address?: string;
-  note?: string;
-  images?: string[];
+    name: string;
+    phoneNumbers: string[];
+    address?: string;
+    note?: string;
+    images?: string[];
 }
 
 export interface CreateClientResponse {
-  id: string;
-  name: string;
-  phoneNumbers: string[];
-  address: string;
-  note: string;
-  images: string[];
-  createdAt: string;
+    id: string;
+    name: string;
+    phoneNumbers: string[];
+    address: string;
+    note: string;
+    images: string[];
+    createdAt: string;
 }
 
 export interface UploadImageResponse {
-  url: string;
-  path?: string;
+    url: string;
+    path?: string;
 }
 
 export interface Debtor {
-  id: number;
-  name: string;
-  address: string;
-  note: string;
-  role: string;
-  createAt: string;
-  sellerId: number;
-  debtor_image: Array<{
     id: number;
-    image: string;
+    name: string;
+    address: string;
+    note: string;
+    role: string;
     createAt: string;
-    debtorId: number;
-  }>;
-  debtroPhoneNumber: Array<{
-    id: number;
-    number: string;
-    debtorId: number;
-    createAt: string;
-  }>;
-  borrowedProduct: Array<{
+    sellerId: number;
+    debtor_image: Array<{
+        id: number;
+        image: string;
+        createAt: string;
+        debtorId: number;
+    }>;
+    debtroPhoneNumber: Array<{
+        id: number;
+        number: string;
+        debtorId: number;
+        createAt: string;
+    }>;
+    borrowedProduct: Array<{
+        id: number;
+        productName: string;
+        term: string;
+        totalAmount: number;
+        note: string;
+        debtorId: number;
+        monthPayment: number;
+        createAt: string;
+    }>;
+}
+
+export interface BorrowedProduct {
     id: number;
     productName: string;
     term: string;
@@ -170,32 +182,71 @@ export interface Debtor {
     debtorId: number;
     monthPayment: number;
     createAt: string;
-  }>;
+    debtor: {
+        id: number;
+        name: string;
+        address: string;
+        note: string;
+        role: string;
+        createAt: string;
+        sellerId: number;
+    };
+    borrowedProductImage: Array<{
+        id: number;
+        image: string;
+        borrowedProductId: number;
+        createAt: string;
+    }>;
+    paymentHistory: any[];
 }
 
-export interface BorrowedProduct {
-  id: number;
-  productName: string;
-  term: string;
-  totalAmount: number;
-  note: string;
-  debtorId: number;
-  monthPayment: number;
-  createAt: string;
-  debtor: {
-    id: number;
-    name: string;
-    address: string;
-    note: string;
-    role: string;
-    createAt: string;
-    sellerId: number;
-  };
-  borrowedProductImage: Array<{
-    id: number;
-    image: string;
-    borrowedProductId: number;
-    createAt: string;
-  }>;
-  paymentHistory: any[];
-}
+// Fixed import path to use correct instance location
+
+// Create borrowed product with images
+export const createBorrowedProduct = async (data: {
+    productName: string;
+    term: string;
+    totalAmount: number;
+    note?: string;
+    debtorId: number;
+    images: string[];
+}) => {
+    const response = await instance().post("/borrowed-product", data);
+    return response.data;
+};
+
+// Delete borrowed product
+export const deleteBorrowedProduct = async (id: number) => {
+    const response = await instance().delete(`/borrowed-product/${id}`);
+    return response.data;
+};
+
+// Update debtor
+export const updateDebtor = async (
+    id: number,
+    data: {
+        name: string;
+        phoneNumbers: string[];
+        address?: string;
+        note?: string;
+    }
+) => {
+    const response = await instance().patch(`/debtor/${id}`, data);
+    return response.data;
+};
+
+// Update borrowed product
+export const updateBorrowedProduct = async (
+    id: number,
+    data: {
+        productName: string;
+        term: string;
+        totalAmount: number;
+        note?: string;
+        debtorId: number;
+        images: string[];
+    }
+) => {
+    const response = await instance().patch(`/borrowed-product/${id}`, data);
+    return response.data;
+};
