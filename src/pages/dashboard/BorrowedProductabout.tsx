@@ -77,7 +77,9 @@ const BorrowedProductAbout: React.FC = () => {
         note: data.note || "",
       })
 
-      const phoneNumbers = data.debtor?.debtroPhoneNumber?.map((p: any) => (typeof p === "string" ? p : p.number)) || [""]
+      const phoneNumbers = data.debtor?.debtroPhoneNumber?.map((p: any) => (typeof p === "string" ? p : p.number)) || [
+        "",
+      ]
       setDebtorEditForm({
         name: data.debtor?.name || "",
         phoneNumbers: phoneNumbers.length > 0 ? phoneNumbers : [""],
@@ -150,12 +152,12 @@ const BorrowedProductAbout: React.FC = () => {
   })
 
   const handleProductSave = () => {
-    if (!data) return // Added null check for data
+    if (!data) return
 
     updateProductMutation.mutate({
       productName: editForm.productName,
       term: editForm.term,
-      totalAmount: Number(editForm.totalAmount), // Ensure proper number conversion
+      totalAmount: Number(editForm.totalAmount),
       note: editForm.note,
       debtorId: data.debtorId,
       images: data.borrowedProductImage?.map((img: any) => img.image) || [],
@@ -163,7 +165,7 @@ const BorrowedProductAbout: React.FC = () => {
   }
 
   const handleDebtorSave = () => {
-    if (!data) return // Added null check for data
+    if (!data) return
 
     updateDebtorMutation.mutate({
       name: debtorEditForm.name,
@@ -454,6 +456,10 @@ const BorrowedProductAbout: React.FC = () => {
                         src={`http://18.159.45.32/multer/${img.image}`}
                         alt={`Mahsulot ${index + 1}`}
                         className="w-full h-24 sm:h-32 object-cover rounded-lg border-2 border-gray-200 group-hover:border-blue-400 transition-colors"
+                        onError={(e) => {
+                          // Fallback to placeholder if image fails to load
+                          e.currentTarget.src = "https://via.placeholder.com/200x200?text=Image"
+                        }}
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-lg transition-colors flex items-center justify-center">
                         <Eye className="w-4 h-4 sm:w-6 sm:h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -471,7 +477,7 @@ const BorrowedProductAbout: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white/90 backdrop-blur-sm  rounded-2xl shadow-xl border border-white/20 overflow-hidden"
+          className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden"
         >
           <div className="bg-gradient-to-r from-green-600 to-teal-600 p-6 text-white">
             <div className="flex items-center justify-between">
@@ -502,10 +508,10 @@ const BorrowedProductAbout: React.FC = () => {
                     setIsEditingDebtor(true)
                   }
                 }}
-                className="flex ml-[2px] items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 mt-[30px] ml-[5px] rounded-lg transition-colors"
+                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
               >
                 {isEditingDebtor ? <Save className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
-                {isEditingDebtor ? "" : "Tahrirlash"}
+                {isEditingDebtor ? "Saqlash" : "Tahrirlash"}
               </button>
             </div>
           </div>
@@ -624,7 +630,7 @@ const BorrowedProductAbout: React.FC = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={selectedImage || "/placeholder.svg"}
+                src={selectedImage || "https://via.placeholder.com/400x400?text=Image"}
                 alt="Katta rasm"
                 className="max-w-full max-h-full object-contain rounded-lg"
               />
@@ -639,47 +645,7 @@ const BorrowedProductAbout: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {showDeleteConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
-              className="bg-white rounded-2xl p-6 max-w-md w-full"
-            >
-              <div className="text-center space-y-4">
-                <div className="text-red-500 text-6xl">⚠️</div>
-                <h3 className="text-xl font-bold text-gray-900">Mahsulotni o'chirish</h3>
-                <p className="text-gray-600">
-                  Haqiqatan ham bu mahsulotni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi.
-                </p>
-                <div className="flex gap-3 justify-center">
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-                  >
-                    Bekor qilish
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                  >
-                    O'chirish
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+      {/* Payment Modals */}
       {/* One Month Payment Modal */}
       <AnimatePresence>
         {showOneMonthPayment && (
@@ -862,7 +828,7 @@ const BorrowedProductAbout: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Success Modal with Confetti Animation */}
+      {/* Success Modal */}
       <AnimatePresence>
         {showSuccessModal && (
           <motion.div
@@ -877,37 +843,6 @@ const BorrowedProductAbout: React.FC = () => {
               exit={{ scale: 0.8, opacity: 0 }}
               className="bg-white rounded-3xl w-full max-w-sm p-6 sm:p-8 text-center relative overflow-hidden"
             >
-              {/* Confetti Animation */}
-              <div className="absolute inset-0 pointer-events-none">
-                {Array.from({ length: 20 }, (_, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{
-                      y: -20,
-                      x: Math.random() * 300,
-                      rotate: 0,
-                      opacity: 1,
-                    }}
-                    animate={{
-                      y: 400,
-                      rotate: 360,
-                      opacity: 0,
-                    }}
-                    transition={{
-                      duration: 3,
-                      delay: Math.random() * 2,
-                      repeat: Number.POSITIVE_INFINITY,
-                      repeatDelay: 3,
-                    }}
-                    className={`absolute w-2 h-2 ${["bg-blue-500", "bg-green-500", "bg-yellow-500", "bg-red-500", "bg-purple-500"][i % 5]
-                      }`}
-                    style={{
-                      clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
-                    }}
-                  />
-                ))}
-              </div>
-
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
