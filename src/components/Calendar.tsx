@@ -122,84 +122,111 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
     }
   }
 
-  // Tanlangan sanaga mos to'lovlarni olish - paymentDate dan foydalanish
+  // Har bir debtor uchun to'lov sanalarini hisoblash
+  const getPaymentDaysForDebtor = (paymentDate: PaymentDate, debtor: Debtor) => {
+    const paymentDayDate = new Date(paymentDate.paymentDay)
+    const paymentDayOfMonth = paymentDayDate.getUTCDate() // 14
+
+    const paymentDays: { day: number; month: number; year: number; amount: number }[] = []
+
+    // Har bir borrowedProduct uchun to'lov kunlarini hisoblash
+    debtor.borrowedProducts.forEach((product) => {
+      if (product.totalAmount > 0) {
+        const createDate = new Date(product.createAt)
+        const termDate = new Date(product.term)
+
+        // Yaratilgan oydan boshlab term oygacha har oyda to'lov
+        const currentDate = new Date(createDate.getUTCFullYear(), createDate.getUTCMonth(), paymentDayOfMonth)
+
+        while (currentDate <= termDate) {
+          paymentDays.push({
+            day: paymentDayOfMonth,
+            month: currentDate.getMonth(),
+            year: currentDate.getFullYear(),
+            amount: product.monthPayment,
+          })
+
+          // Keyingi oyga o'tish
+          currentDate.setMonth(currentDate.getMonth() + 1)
+        }
+      }
+    })
+
+    return paymentDays
+  }
+
+  // Tanlangan sanaga mos to'lovlarni olish
   const paymentsForSelectedDate: PaymentData[] = useMemo(() => {
     if (!data) return []
 
     const monthTotal: MonthTotal = data.monthTotal
-
-    // YYYY-MM-DD format - timezone muammosini hal qilish uchun
-    const selectedDateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(selectedDate).padStart(2, "0")}`
-
     const payments: PaymentData[] = []
 
-    // paymentDate massividan foydalanish
+    // Har bir paymentDate uchun
     monthTotal.paymentDate.forEach((paymentDate, idx) => {
-      // paymentDay sanasini YYYY-MM-DD formatga o'tkazamiz - timezone muammosini hal qilish
-      const paymentDateObj = new Date(paymentDate.paymentDay)
-      const paymentDateStr = `${paymentDateObj.getUTCFullYear()}-${String(paymentDateObj.getUTCMonth() + 1).padStart(2, "0")}-${String(paymentDateObj.getUTCDate()).padStart(2, "0")}`
+      const debtor = monthTotal.debtors.find((d) => d.id === paymentDate.debtorId)
+      if (debtor) {
+        const paymentDays = getPaymentDaysForDebtor(paymentDate, debtor)
 
-      // Faqat tanlangan sana uchun
-      if (paymentDateStr === selectedDateStr) {
-        // Debtorni topish
-        const debtor = monthTotal.debtors.find((d) => d.id === paymentDate.debtorId)
-        if (debtor) {
-          // Bu paymentDay bilan mos keladigan borrowedProduct topish va totalAmount > 0 tekshirish
-          const matchedProduct = debtor.borrowedProducts.find((bp) => {
-            const termDateObj = new Date(bp.term)
-            const termDateStr = `${termDateObj.getUTCFullYear()}-${String(termDateObj.getUTCMonth() + 1).padStart(2, "0")}-${String(termDateObj.getUTCDate()).padStart(2, "0")}`
-            return termDateStr === paymentDateStr && bp.totalAmount > 0 // totalAmount > 0 shartini qo'shish
-          })
+        // Tanlangan sana bilan mos keladigan to'lovlarni topish
+        paymentDays.forEach((paymentDay) => {
+          if (paymentDay.day === selectedDate && paymentDay.month === currentMonth && paymentDay.year === currentYear) {
+            const currentDate = new Date()
+            const paymentDate = new Date(currentYear, currentMonth, selectedDate)
 
-          // Faqat faol borrowedProduct bo'lsa to'lovni ko'rsatish
-          if (matchedProduct) {
+            let status: "pending" | "completed" | "overdue" = "pending"
+            if (paymentDate < currentDate) {
+              status = "overdue"
+            }
+
             payments.push({
               id: debtor.id,
               name: debtor.name,
-              amount: `UZS ${matchedProduct.monthPayment.toLocaleString("uz-UZ")}`,
-              date: paymentDate.paymentDay,
-              status: "pending",
-              paymentKey: `${debtor.id}-${paymentDate.paymentDay}-${idx}`,
+              amount: `${paymentDay.amount.toLocaleString("uz-UZ")} so'm`,
+              date: paymentDate.toISOString(),
+              status: status,
+              paymentKey: `${debtor.id}-${currentYear}-${currentMonth}-${selectedDate}-${idx}`,
             })
           }
-        }
+        })
       }
     })
 
     return payments
   }, [data, selectedDate, currentMonth, currentYear])
 
+  // Kalendar kunlari uchun to'lov mavjudligini tekshirish
+  const hasPaymentOnDay = (day: number) => {
+    if (!data) return false
+
+    const monthTotal: MonthTotal = data.monthTotal
+
+    return monthTotal.paymentDate.some((paymentDate) => {
+      const debtor = monthTotal.debtors.find((d) => d.id === paymentDate.debtorId)
+      if (debtor) {
+        const paymentDays = getPaymentDaysForDebtor(paymentDate, debtor)
+        return paymentDays.some(
+          (paymentDay) =>
+            paymentDay.day === day && paymentDay.month === currentMonth && paymentDay.year === currentYear,
+        )
+      }
+      return false
+    })
+  }
+
   const renderCalendarDays = () => {
     const daysInMonth = getDaysInMonth(currentMonth, currentYear)
     const firstDay = getFirstDayOfMonth(currentMonth, currentYear)
     const days = []
 
+    // Bo'sh kunlar (oyning boshida)
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-14"></div>)
+    }
+
+    // Oyning kunlari
     for (let day = 1; day <= daysInMonth; day++) {
-      // YYYY-MM-DD format - timezone muammosini hal qilish
-      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-
-      // paymentDate massividan paymentDay sanalarini tekshirish
-      const hasPayment =
-        data?.monthTotal?.paymentDate.some((paymentDate: PaymentDate) => {
-          const paymentDateObj = new Date(paymentDate.paymentDay)
-          const paymentDateStr = `${paymentDateObj.getUTCFullYear()}-${String(paymentDateObj.getUTCMonth() + 1).padStart(2, "0")}-${String(paymentDateObj.getUTCDate()).padStart(2, "0")}`
-
-          if (paymentDateStr === dateStr) {
-            // Debtorni topish va faol borrowedProduct borligini tekshirish
-            const debtor = data.monthTotal.debtors.find((d:any) => d.id === paymentDate.debtorId)
-            if (debtor) {
-              // Bu paymentDay bilan mos keladigan va totalAmount > 0 bo'lgan borrowedProduct borligini tekshirish
-              const hasActiveProduct = debtor.borrowedProducts.some((bp:any) => {
-                const termDateObj = new Date(bp.term)
-                const termDateStr = `${termDateObj.getUTCFullYear()}-${String(termDateObj.getUTCMonth() + 1).padStart(2, "0")}-${String(termDateObj.getUTCDate()).padStart(2, "0")}`
-                return termDateStr === paymentDateStr && bp.totalAmount > 0
-              })
-              return hasActiveProduct
-            }
-          }
-          return false
-        }) || false
-
+      const hasPayment = hasPaymentOnDay(day)
       const isSelected = day === selectedDate
       const isToday =
         day === new Date().getDate() &&
@@ -356,7 +383,11 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
                 </div>
               ))
             ) : (
-              <div className="text-center text-gray-500 py-4">Bu kunda to'lovlar topilmadi.</div>
+              <div className="text-center text-gray-500 py-8">
+                <div className="text-4xl mb-2">📅</div>
+                <p className="text-lg font-medium">Bu kunda to'lovlar yo'q</p>
+                <p className="text-sm text-gray-400 mt-1">Boshqa sanani tanlang</p>
+              </div>
             )}
           </div>
         </div>

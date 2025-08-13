@@ -55,6 +55,28 @@ export const fetchSeller = async (token?: string) => {
   return response.data
 }
 
+// Seller profil ma'lumotlarini olish
+export const fetchSellerProfile = async () => {
+  const response = await instance().get("/seller/profile")
+  return response.data.seller
+}
+
+// Seller profil ma'lumotlarini yangilash
+export const updateSellerProfile = async (data: {
+  name: string
+  password?: string
+  phoneNumber: string
+  email: string
+  image?: string
+}) => {
+  // sellerId ni tokendan olish kerak, hozircha 1 deb qo'yamiz
+  const response = await instance().patch("/seller/1", {
+    ...data,
+    status: true, // doim true bo'lishi kerak
+  })
+  return response.data
+}
+
 export const payWallet = async (money: number) => {
   const response = await instance().post("/seller/payment", { money })
   return response.data
@@ -139,6 +161,18 @@ export interface CreateClientResponse {
 export interface UploadImageResponse {
   url: string
   path?: string
+}
+
+// Seller Profile Interface
+export interface SellerProfile {
+  id: number
+  name: string
+  phoneNumber: string
+  email: string
+  image?: string
+  status: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Debtor {
