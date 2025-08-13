@@ -4,8 +4,23 @@ import { ChevronLeft, ChevronRight, ArrowLeft, TrendingUp, Clock, CheckCircle } 
 import { useState, useMemo } from "react"
 import { useCalendarData } from "../hooks/calendar-date"
 
+interface PaymentData {
+  id: number
+  name: string
+  amount: string
+  date: string
+  status: "pending" | "completed" | "overdue"
+  paymentKey?: string
+}
+
+interface PaymentDate {
+  debtorId: number
+  paymentDay: string
+}
+
 interface BorrowedProduct {
   monthPayment: number
+  term: string
   createAt: string
   totalAmount: number
 }
@@ -18,26 +33,12 @@ interface Debtor {
   borrowedProducts: BorrowedProduct[]
 }
 
-interface PaymentDate {
-  debtorId: number
-  paymentDay: string
-}
-
 interface MonthTotal {
   sellerId: number
   thisMonthDebtorsCount: number
   thisMonthTotalAmount: number
   paymentDate: PaymentDate[]
   debtors: Debtor[]
-}
-
-interface PaymentData {
-  id: number
-  name: string
-  amount: string
-  date: string
-  status: "pending" | "completed" | "overdue"
-  paymentKey: string
 }
 
 const Calendar = ({ onBack }: { onBack: () => void }) => {
@@ -48,23 +49,30 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
   const { data, isLoading, isError, error } = useCalendarData()
 
   const months = [
-    "Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun",
-    "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr",
+    "Yanvar",
+    "Fevral",
+    "Mart",
+    "Aprel",
+    "May",
+    "Iyun",
+    "Iyul",
+    "Avgust",
+    "Sentabr",
+    "Oktabr",
+    "Noyabr",
+    "Dekabr",
   ]
   const daysOfWeek = ["DU", "SE", "CH", "PA", "JU", "SH", "YA"]
 
-  // Oy kunlari soni
   const getDaysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate()
   }
 
-  // Oy birinchi kunining haftadagi indeksi (dushanba = 0)
   const getFirstDayOfMonth = (month: number, year: number) => {
     const firstDay = new Date(year, month, 1).getDay()
-    return firstDay === 0 ? 6 : firstDay - 1
+    return firstDay === 0 ? 6 : firstDay - 1 // Adjust for Monday start (0=Sunday, 1=Monday, ..., 6=Saturday)
   }
 
-  // Oy o‘zgartirish
   const navigateMonth = (direction: "prev" | "next") => {
     if (direction === "prev") {
       if (currentMonth === 0) {
@@ -83,84 +91,90 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
     }
   }
 
-  // Status iconlari
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
         return <CheckCircle size={16} className="text-green-500" />
       case "overdue":
         return <Clock size={16} className="text-red-500" />
-      default:
+      default: // pending
         return <Clock size={16} className="text-orange-500" />
     }
   }
 
-  // Status ranglari
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
         return "bg-green-50 border-green-200"
       case "overdue":
         return "bg-red-50 border-red-200"
-      default:
+      default: // pending
         return "bg-orange-50 border-orange-200"
     }
   }
 
-  // Tanlangan sanaga mos to'lovlarni olish
+  // Tanlangan sanaga mos to'lovlarni olish - paymentDate dan foydalanish
   const paymentsForSelectedDate: PaymentData[] = useMemo(() => {
     if (!data) return []
 
     const monthTotal: MonthTotal = data.monthTotal
 
-    // YYYY-MM-DD format
-    const selectedDateStr = new Date(currentYear, currentMonth, selectedDate)
-      .toISOString()
-      .slice(0, 10)
+    // YYYY-MM-DD format - timezone muammosini hal qilish uchun
+    const selectedDateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(selectedDate).padStart(2, "0")}`
 
     const payments: PaymentData[] = []
 
-    monthTotal.paymentDate.forEach((pd, idx) => {
+    // paymentDate massividan foydalanish
+    monthTotal.paymentDate.forEach((paymentDate, idx) => {
+      // paymentDay sanasini YYYY-MM-DD formatga o'tkazamiz - timezone muammosini hal qilish
+      const paymentDateObj = new Date(paymentDate.paymentDay)
+      const paymentDateStr = `${paymentDateObj.getUTCFullYear()}-${String(paymentDateObj.getUTCMonth() + 1).padStart(2, "0")}-${String(paymentDateObj.getUTCDate()).padStart(2, "0")}`
+
       // Faqat tanlangan sana uchun
-      if (pd.paymentDay.slice(0, 10) !== selectedDateStr) return
+      if (paymentDateStr === selectedDateStr) {
+        // Debtorni topish
+        const debtor = monthTotal.debtors.find((d) => d.id === paymentDate.debtorId)
+        if (debtor) {
+          // Bu paymentDay bilan mos keladigan borrowedProduct topish
+          const matchedProduct = debtor.borrowedProducts.find((bp) => {
+            const termDateObj = new Date(bp.term)
+            const termDateStr = `${termDateObj.getUTCFullYear()}-${String(termDateObj.getUTCMonth() + 1).padStart(2, "0")}-${String(termDateObj.getUTCDate()).padStart(2, "0")}`
+            return termDateStr === paymentDateStr
+          })
 
-      const debtor = monthTotal.debtors.find(d => d.id === pd.debtorId)
-      if (!debtor) return
+          const amount = matchedProduct ? matchedProduct.monthPayment : debtor.totalDebt
 
-      // borrowedProducts ichidan paymentDay bilan to'liq mos keladigan elementni topamiz
-      const matchedProduct = debtor.borrowedProducts.find(bp => bp.createAt === pd.paymentDay)
-
-      const amount = matchedProduct ? matchedProduct.monthPayment : debtor.totalDebt
-
-      payments.push({
-        id: debtor.id,
-        name: debtor.name,
-        amount: `UZS ${amount.toLocaleString("uz-UZ")}`,
-        date: pd.paymentDay,
-        status: "pending",
-        paymentKey: `${debtor.id}-${pd.paymentDay}-${idx}`, // noyob kalit
-      })
+          payments.push({
+            id: debtor.id,
+            name: debtor.name,
+            amount: `UZS ${amount.toLocaleString("uz-UZ")}`,
+            date: paymentDate.paymentDay,
+            status: "pending",
+            paymentKey: `${debtor.id}-${paymentDate.paymentDay}-${idx}`,
+          })
+        }
+      }
     })
 
     return payments
   }, [data, selectedDate, currentMonth, currentYear])
 
-  // Kalendardagi kunlarni yaratish
   const renderCalendarDays = () => {
     const daysInMonth = getDaysInMonth(currentMonth, currentYear)
     const firstDay = getFirstDayOfMonth(currentMonth, currentYear)
     const days = []
 
-    // Bo'sh joylar
-    for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-14"></div>)
-    }
-
-    // Oy kunlari
     for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = new Date(currentYear, currentMonth, day).toISOString().slice(0, 10)
+      // YYYY-MM-DD format - timezone muammosini hal qilish
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
 
-      const hasPayment = data?.monthTotal?.paymentDate.some(pd => pd.paymentDay.slice(0, 10) === dateStr) || false
+      // paymentDate massividan paymentDay sanalarini tekshirish
+      const hasPayment =
+        data?.monthTotal?.paymentDate.some((paymentDate: PaymentDate) => {
+          const paymentDateObj = new Date(paymentDate.paymentDay)
+          const paymentDateStr = `${paymentDateObj.getUTCFullYear()}-${String(paymentDateObj.getUTCMonth() + 1).padStart(2, "0")}-${String(paymentDateObj.getUTCDate()).padStart(2, "0")}`
+          return paymentDateStr === dateStr
+        }) || false
 
       const isSelected = day === selectedDate
       const isToday =
@@ -194,7 +208,6 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
         </button>,
       )
     }
-
     return days
   }
 
@@ -267,7 +280,7 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
         </div>
         <div className="px-6 pb-6">
           <div className="grid grid-cols-7 gap-2 mb-4">
-            {daysOfWeek.map(day => (
+            {daysOfWeek.map((day) => (
               <div key={day} className="h-10 flex items-center justify-center">
                 <span className="text-sm font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-lg">{day}</span>
               </div>
@@ -276,7 +289,6 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
           <div className="grid grid-cols-7 gap-2">{renderCalendarDays()}</div>
         </div>
       </div>
-
       <div className="p-6">
         <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/50">
           <div className="flex items-center gap-3 mb-6">
@@ -289,7 +301,7 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
           </div>
           <div className="space-y-4">
             {paymentsForSelectedDate.length > 0 ? (
-              paymentsForSelectedDate.map(payment => (
+              paymentsForSelectedDate.map((payment) => (
                 <div
                   key={payment.paymentKey}
                   className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-200 hover:scale-[1.02] ${getStatusColor(payment.status)}`}

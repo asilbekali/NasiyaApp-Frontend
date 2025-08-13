@@ -3,7 +3,7 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowLeft, Trash2, X, Plus, Phone, MapPin, FileText, Calendar, CreditCard, Eye } from "lucide-react"
+import { ArrowLeft, Trash2, X, Plus, Phone, MapPin, FileText, Calendar, CreditCard, Eye } from 'lucide-react'
 import { fetchDebtorById, type Debtor } from "../../service/use-login"
 import { instance } from "../../hooks/instance"
 import { useState } from "react"
@@ -26,9 +26,6 @@ export default function DebtorAbout() {
     enabled: !!id,
   })
 
-
-
-
   // Debtorni o'chirish mutatsiyasi
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -42,16 +39,14 @@ export default function DebtorAbout() {
     },
   })
 
-
   const handleDelete = () => {
     deleteMutation.mutate()
     setIsModalOpen(false)
   }
 
-  const totalDebt = debtor?.borrowedProduct.reduce((sum, p) => sum + (p.totalAmount || 0), 0) || 0
-
-
-
+  // Filter out loans with totalAmount of 0
+  const activeBorrowedProducts = debtor?.borrowedProduct.filter((loan) => loan.totalAmount > 0) || []
+  const totalDebt = activeBorrowedProducts.reduce((sum, p) => sum + (p.totalAmount || 0), 0) || 0
 
   if (isLoading) {
     return (
@@ -183,12 +178,12 @@ export default function DebtorAbout() {
         >
           <h2 className="font-bold text-base sm:text-lg text-gray-800 mb-3 sm:mb-4 flex items-center">
             <Calendar className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-500" />
-            Faol nasiyalar ({debtor.borrowedProduct.length})
+            Faol nasiyalar ({activeBorrowedProducts.length})
           </h2>
 
           <div className="space-y-2 sm:space-y-3">
-            {debtor.borrowedProduct.length > 0 ? (
-              debtor.borrowedProduct.map((loan, index) => {
+            {activeBorrowedProducts.length > 0 ? (
+              activeBorrowedProducts.map((loan, index) => {
                 const termDate = new Date(loan.term)
                 const createDate = new Date(loan.createAt)
                 const isOverdue = termDate < new Date()

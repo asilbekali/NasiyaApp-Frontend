@@ -28,7 +28,13 @@ import {
   deleteBorrowedProduct,
   updateBorrowedProduct,
   updateDebtor,
+  payOneMonth,
+  payCustomAmount,
+  getRemainingMonths,
+  payMultipleMonths,
   type BorrowedProduct,
+  type RemainingMonthsResponse,
+  type PaymentResponse,
 } from "../../service/use-login"
 
 const BorrowedProductAbout: React.FC = () => {
@@ -61,6 +67,8 @@ const BorrowedProductAbout: React.FC = () => {
     address: "",
     note: "",
   })
+
+  const [remainingMonthsData, setRemainingMonthsData] = useState<RemainingMonthsResponse | null>(null)
 
   const { data, isLoading, error } = useQuery<BorrowedProduct>({
     queryKey: ["borrowedProduct", id],
@@ -135,19 +143,75 @@ const BorrowedProductAbout: React.FC = () => {
     },
   })
 
-  const paymentMutation = useMutation({
-    mutationFn: (paymentData: { amount: number; months?: number[] }) => {
-      // Mock payment API call
-      return new Promise((resolve) => setTimeout(resolve, 1500))
-    },
-    onSuccess: () => {
+  // Fetch remaining months when component loads
+  const { data: remainingData } = useQuery<RemainingMonthsResponse>({
+    queryKey: ["remainingMonths", data?.debtorId, data?.id],
+    queryFn: () =>
+      getRemainingMonths({
+        debtorId: data?.debtorId || 0,
+        borrowedProductId: data?.id || 0,
+      }),
+    enabled: !!data?.debtorId && !!data?.id,
+  })
+
+  // One month payment mutation
+  const oneMonthPaymentMutation = useMutation({
+    mutationFn: () =>
+      payOneMonth({
+        debtorId: data?.debtorId || 0,
+        borrowedProductId: data?.id || 0,
+      }),
+    onSuccess: (response: PaymentResponse) => {
       queryClient.invalidateQueries({ queryKey: ["borrowedProduct", id] })
-      // Close all payment modals
+      queryClient.invalidateQueries({ queryKey: ["remainingMonths", data?.debtorId, data?.id] })
       setShowOneMonthPayment(false)
-      setShowCustomPayment(false)
-      setShowTermSelection(false)
-      setShowPaymentOptions(false)
       setShowSuccessModal(true)
+      console.log("Payment success:", response.message)
+    },
+    onError: (error) => {
+      console.error("Payment failed:", error)
+    },
+  })
+
+  // Custom amount payment mutation
+  const customPaymentMutation = useMutation({
+    mutationFn: (amount: number) =>
+      payCustomAmount({
+        debtorId: data?.debtorId || 0,
+        borrowedProductId: data?.id || 0,
+        amount,
+      }),
+    onSuccess: (response: PaymentResponse) => {
+      queryClient.invalidateQueries({ queryKey: ["borrowedProduct", id] })
+      queryClient.invalidateQueries({ queryKey: ["remainingMonths", data?.debtorId, data?.id] })
+      setShowCustomPayment(false)
+      setCustomAmount("")
+      setShowSuccessModal(true)
+      console.log("Payment success:", response.message)
+    },
+    onError: (error) => {
+      console.error("Payment failed:", error)
+    },
+  })
+
+  // Multiple months payment mutation
+  const multipleMonthsPaymentMutation = useMutation({
+    mutationFn: (monthsToPay: number) =>
+      payMultipleMonths({
+        debtorId: data?.debtorId || 0,
+        borrowedProductId: data?.id || 0,
+        monthsToPay,
+      }),
+    onSuccess: (response: PaymentResponse) => {
+      queryClient.invalidateQueries({ queryKey: ["borrowedProduct", id] })
+      queryClient.invalidateQueries({ queryKey: ["remainingMonths", data?.debtorId, data?.id] })
+      setShowTermSelection(false)
+      setSelectedTerms([])
+      setShowSuccessModal(true)
+      console.log("Payment success:", response.message)
+    },
+    onError: (error) => {
+      console.error("Payment failed:", error)
     },
   })
 
@@ -181,19 +245,18 @@ const BorrowedProductAbout: React.FC = () => {
   }
 
   const handleOneMonthPayment = () => {
-    paymentMutation.mutate({ amount: data?.monthPayment || 0 })
+    oneMonthPaymentMutation.mutate()
   }
 
   const handleCustomPayment = () => {
     if (customAmount && Number(customAmount) > 0) {
-      paymentMutation.mutate({ amount: Number(customAmount) })
+      customPaymentMutation.mutate(Number(customAmount))
     }
   }
 
   const handleTermPayment = () => {
     if (selectedTerms.length > 0) {
-      const totalAmount = selectedTerms.length * (data?.monthPayment || 0)
-      paymentMutation.mutate({ amount: totalAmount, months: selectedTerms })
+      multipleMonthsPaymentMutation.mutate(selectedTerms.length)
     }
   }
 
@@ -682,10 +745,10 @@ const BorrowedProductAbout: React.FC = () => {
 
               <button
                 onClick={handleOneMonthPayment}
-                disabled={paymentMutation.isPending}
+                disabled={oneMonthPaymentMutation.isPending}
                 className="w-full bg-blue-500 text-white py-4 rounded-xl font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 touch-manipulation text-base sm:text-lg"
               >
-                {paymentMutation.isPending ? "To'lov amalga oshirilmoqda..." : "To'lov uchun so'ndirish"}
+                {oneMonthPaymentMutation.isPending ? "To'lov amalga oshirilmoqda..." : "To'lov uchun so'ndirish"}
               </button>
             </motion.div>
           </motion.div>
@@ -737,10 +800,10 @@ const BorrowedProductAbout: React.FC = () => {
 
                 <button
                   onClick={handleCustomPayment}
-                  disabled={!customAmount || Number(customAmount) <= 0 || paymentMutation.isPending}
+                  disabled={!customAmount || Number(customAmount) <= 0 || customPaymentMutation.isPending}
                   className="w-full bg-blue-500 text-white py-4 rounded-xl font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation text-base sm:text-lg"
                 >
-                  {paymentMutation.isPending ? "To'lov amalga oshirilmoqda..." : "So'ndirish"}
+                  {customPaymentMutation.isPending ? "To'lov amalga oshirilmoqda..." : "So'ndirish"}
                 </button>
               </div>
             </motion.div>
@@ -783,45 +846,48 @@ const BorrowedProductAbout: React.FC = () => {
               </div>
 
               <div className="space-y-2 sm:space-y-3">
-                {Array.from({ length: 12 }, (_, i) => {
-                  const monthDate = dayjs().add(i + 1, "month")
-                  const isSelected = selectedTerms.includes(i)
+                {remainingData &&
+                  Array.from({ length: remainingData.remainingMonths }, (_, i) => {
+                    const monthDate = dayjs().add(i + 1, "month")
+                    const isSelected = selectedTerms.includes(i)
 
-                  return (
-                    <div
-                      key={i}
-                      onClick={() => toggleTermSelection(i)}
-                      className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all touch-manipulation ${isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => toggleTermSelection(i)}
+                        className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all touch-manipulation ${
+                          isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
                         }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center ${isSelected ? "border-blue-500 bg-blue-500" : "border-gray-300"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                              isSelected ? "border-blue-500 bg-blue-500" : "border-gray-300"
                             }`}
-                        >
-                          {isSelected && <Check className="w-3 h-3 text-white" />}
+                          >
+                            {isSelected && <Check className="w-3 h-3 text-white" />}
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm sm:text-base">{i + 1}-oy</div>
+                            <div className="text-xs sm:text-sm text-gray-500">{monthDate.format("DD.MM.YYYY")}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-medium text-sm sm:text-base">{i + 1}-oy</div>
-                          <div className="text-xs sm:text-sm text-gray-500">{monthDate.format("DD.MM.YYYY")}</div>
+                        <div className="text-right">
+                          <div className="font-semibold text-sm sm:text-base">
+                            {(remainingData?.monthPayment || 0).toLocaleString()} so'm
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-sm sm:text-base">
-                          {(data?.monthPayment || 0).toLocaleString()} so'm
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
               </div>
 
               <button
                 onClick={handleTermPayment}
-                disabled={selectedTerms.length === 0 || paymentMutation.isPending}
+                disabled={selectedTerms.length === 0 || multipleMonthsPaymentMutation.isPending}
                 className="w-full bg-blue-500 text-white py-4 rounded-xl font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation text-base sm:text-lg"
               >
-                {paymentMutation.isPending ? "To'lov amalga oshirilmoqda..." : "So'ndirish"}
+                {multipleMonthsPaymentMutation.isPending ? "To'lov amalga oshirilmoqda..." : "So'ndirish"}
               </button>
             </motion.div>
           </motion.div>

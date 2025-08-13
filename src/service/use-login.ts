@@ -192,6 +192,21 @@ export interface BorrowedProduct {
     paymentHistory: any[];
 }
 
+// Payment response interfaces
+export interface RemainingMonthsResponse {
+    borrowedProductId: number;
+    debtorId: number;
+    totalAmount: number;
+    monthPayment: number;
+    remainingMonths: number;
+}
+
+export interface PaymentResponse {
+    message: string;
+    remainingAmount: number;
+    remainingMonths: number;
+}
+
 // Fixed import path to use correct instance location
 
 // Create borrowed product with images
@@ -240,5 +255,57 @@ export const updateBorrowedProduct = async (
     }
 ) => {
     const response = await instance().patch(`/borrowed-product/${id}`, data);
+    return response.data;
+};
+
+// Payment API functions
+
+// 1 oy uchun to'lov so'ndirish
+export const payOneMonth = async (data: {
+    debtorId: number;
+    borrowedProductId: number;
+}) => {
+    const response = await instance().post(
+        "/payment-section/one-month-pay",
+        data
+    );
+    return response.data;
+};
+
+// Har qanday miqdorda to'lov so'ndirish
+export const payCustomAmount = async (data: {
+    debtorId: number;
+    borrowedProductId: number;
+    amount: number;
+}) => {
+    const response = await instance().post(
+        "/payment-section/pay-as-you-wish",
+        data
+    );
+    return response.data;
+};
+
+// Qolgan oylar sonini olish
+export const getRemainingMonths = async (data: {
+    debtorId: number;
+    borrowedProductId: number;
+}) => {
+    const response = await instance().post(
+        "/payment-section/remaining-months",
+        data
+    );
+    return response.data;
+};
+
+// Bir necha oyni birdaniga to'lash
+export const payMultipleMonths = async (data: {
+    debtorId: number;
+    borrowedProductId: number;
+    monthsToPay: number;
+}) => {
+    const response = await instance().post(
+        "/payment-section/pay-multiple-months",
+        data
+    );
     return response.data;
 };
