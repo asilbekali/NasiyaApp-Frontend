@@ -1,111 +1,140 @@
-'use client';
+"use client"
 
-import { CalendarIcon, Eye, Plus, Wallet, TrendingUp, Users, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCookies } from 'react-cookie';
-import { fetchAllCustomers, fetchingAllDEbtsTotal, fetchlateDebtors, fetchMonthTotal, fetchSeller } from '../../service/use-login';
-import Calendar from '../../components/Calendar';
-import PaymentTopUp from '../../components/PaymentTopUp';
+import { useState } from "react"
+import { CalendarIcon, Eye, Plus, Wallet, TrendingUp, Users, AlertCircle } from "lucide-react"
 
-
-
-
-interface MonthlyTotalData {
-  sellerId: number;
-  thisMonthDebtorsCount: number;
-  thisMonthTotalAmount: number;
-  debtors: any[];
-}
-
-interface LateDebtorsData {
-  sellerId: number;
-  lateDebtorsCount: number;
-  lateDebtors: any[];
-}
-
-type allDebtorsCount = number; // Corrected: fetchAllCustomers returns a number directly
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useCookies } from "react-cookie"
+import { fetchAllCustomers, fetchingAllDEbtsTotal, fetchlateDebtors, fetchMonthTotal, fetchSeller } from "../../service/use-login"
+import Calendar from "../../components/Calendar"
+import PaymentTopUp from "../../components/PaymentTopUp"
 
 
-type totalDebtPrice = number
+export default function Home() {
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [showPayment, setShowPayment] = useState(false)
+  const [cookies] = useCookies(["token"])
+  const token = cookies.token
+  const queryClient = useQueryClient()
 
+  const {
+    data: sellerData,
+    isLoading: isSellerLoading,
+    isError: isSellerError,
+    error: sellerError,
+  } = useQuery({
+    queryKey: ["seller"],
+    queryFn: () => fetchSeller(token),
+    enabled: !!token,
+  })
 
-export interface Seller {
-  id: number;
-  name: string;
-  password: string;
-  phoneNumber: string;
-  email: string;
-  wallet: number;
-  image: string;
-  status: boolean;
-  role: string;
-  createAt: string;
-}
+  const {
+    data: monthTotal,
+    isLoading: isMonthTotalLoading,
+    isError: isMonthTotalError,
+    error: monthTotalError,
+  } = useQuery({
+    queryKey: ["monthTotal"],
+    queryFn: () => fetchMonthTotal(token),
+    enabled: !!token,
+  })
 
-const Home = () => {
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [showPayment, setShowPayment] = useState(false);
-  const [cookies] = useCookies(['token']);
-  const token = cookies.token;
+  const {
+    data: allTotalDebt,
+    isLoading: isAllTotalDebtLoading,
+    isError: isAllTotalDebtError,
+    error: allTotalDebtError,
+  } = useQuery({
+    queryKey: ["allTotalDebt"],
+    queryFn: () => fetchingAllDEbtsTotal(token),
+    enabled: !!token,
+  })
 
+  const {
+    data: lateDebtorsCount,
+    isLoading: isLateDebtorsCountLoading,
+    isError: isLateDebtorsCountError,
+    error: lateDebtorsCountError,
+  } = useQuery({
+    queryKey: ["lateDebtorsCount"],
+    queryFn: () => fetchlateDebtors(token),
+    enabled: !!token,
+  })
 
+  const {
+    data: allDebtorsCount,
+    isLoading: isAllDebtorsCountLoading,
+    isError: isAllDebtorsCountError,
+    error: allDebtorsCountError,
+  } = useQuery({
+    queryKey: ["allDebtorsCount"],
+    queryFn: () => fetchAllCustomers(token),
+    enabled: !!token,
+  })
 
+  const handleCalendarOpen = () => {
+    // Kalendar ochilishidan oldin barcha ma'lumotlarni yangilash
+    queryClient.invalidateQueries({ queryKey: ["calendarData"] })
+    queryClient.invalidateQueries({ queryKey: ["monthTotal"] })
+    queryClient.invalidateQueries({ queryKey: ["allTotalDebt"] })
+    queryClient.invalidateQueries({ queryKey: ["lateDebtorsCount"] })
+    setShowCalendar(true)
+  }
 
-
-  const { data: seller, isLoading: isLoadingSeller, error: errorSeller } = useQuery<Seller>({
-    queryKey: ['seller'],
-    queryFn: fetchSeller,
-    enabled: !!token
-  });
-
-
-
-
-
-
-  // Fetch Monthly Total
-  const { isLoading: isLoadingMonthTotal, error: errorMonthTotal } = useQuery<MonthlyTotalData>({
-    queryKey: ['monthTotal'],
-    queryFn: fetchMonthTotal,
-    enabled: !!token, // Only fetch if token exists
-  });
-
-  const { data: totalDebtData } = useQuery<totalDebtPrice>({
-    queryKey: ['allTotalDebt'],
-    queryFn: fetchingAllDEbtsTotal,
-    enabled: !!token
-  });
-
-
-
-  // Fetch Late Customers count
-  const { data: lateDebtors, isLoading: isLoadinglateDebtors, error: errorlateDebtors } = useQuery<LateDebtorsData>({
-    queryKey: ['lateDebtorsCount'],
-    queryFn: fetchlateDebtors,
-    enabled: !!token, // Only fetch if token exists
-  });
-
-  // Fetch All Customers count
-  const { data: allCustomersCount, isLoading: isLoadingAllCustomersCount, error: errorAllCustomersCount } = useQuery<allDebtorsCount>({
-    queryKey: ['allDebtorsCount'],
-    queryFn: fetchAllCustomers,
-    enabled: !!token
-  });
-
-  const queryClient = useQueryClient();
+  const handleCalendarClose = () => {
+    // Kalendar yopilganda ham ma'lumotlarni yangilash
+    queryClient.invalidateQueries({ queryKey: ["monthTotal"] })
+    queryClient.invalidateQueries({ queryKey: ["allTotalDebt"] })
+    queryClient.invalidateQueries({ queryKey: ["lateDebtorsCount"] })
+    queryClient.invalidateQueries({ queryKey: ["allDebtorsCount"] })
+    setShowCalendar(false)
+  }
 
   const handlePaymentSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ['seller'] });
-  };
-
+    // To'lov muvaffaqiyatli bo'lganda barcha ma'lumotlarni yangilash
+    queryClient.invalidateQueries({ queryKey: ["seller"] })
+    queryClient.invalidateQueries({ queryKey: ["monthTotal"] })
+    queryClient.invalidateQueries({ queryKey: ["allTotalDebt"] })
+    queryClient.invalidateQueries({ queryKey: ["lateDebtorsCount"] })
+    queryClient.invalidateQueries({ queryKey: ["allDebtorsCount"] })
+  }
 
   if (showCalendar) {
-    return <Calendar onBack={() => setShowCalendar(false)} />;
+    return <Calendar onBack={handleCalendarClose} />
   }
 
   if (showPayment) {
-    return <PaymentTopUp onBack={() => setShowPayment(false)} onPaymentSuccess={handlePaymentSuccess} />;
+    return <PaymentTopUp onBack={() => setShowPayment(false)} onPaymentSuccess={handlePaymentSuccess} />
+  }
+
+  if (
+    isSellerLoading ||
+    isMonthTotalLoading ||
+    isAllTotalDebtLoading ||
+    isLateDebtorsCountLoading ||
+    isAllDebtorsCountLoading
+  ) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 flex items-center justify-center">
+        <div className="text-gray-600 text-lg">Loading dashboard data...</div>
+      </div>
+    )
+  }
+
+  if (isSellerError || isMonthTotalError || isAllTotalDebtError || isLateDebtorsCountError || isAllDebtorsCountError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 flex items-center justify-center">
+        <div className="text-red-600 text-lg">
+          Error loading data:{" "}
+          {sellerError?.message ||
+            monthTotalError?.message ||
+            allTotalDebtError?.message ||
+            lateDebtorsCountError?.message ||
+            allDebtorsCountError?.message ||
+            "Unknown error"}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -116,19 +145,19 @@ const Home = () => {
           <div className="flex items-center gap-3">
             <div className="relative">
               <img
-                src={isLoadingSeller ? 'Yuklanmoqda...' : errorSeller ? 'Xato' : `${seller?.image}`}
+                src={sellerData?.image || "/placeholder.svg?height=40&width=40"}
                 alt="User avatar"
                 className="w-12 h-12 rounded-full border-2 border-white shadow-md"
               />
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
             </div>
             <div>
-              <div className="font-bold text-gray-800 text-lg"> {isLoadingSeller ? 'Yuklanmoqda...' : errorSeller ? 'Xato' : `${seller?.name}`}</div>
+              <div className="font-bold text-gray-800 text-lg">{sellerData?.name || "Testuchun"}</div>
               <div className="text-sm text-gray-500">Xush kelibsiz!</div>
             </div>
           </div>
           <button
-            onClick={() => setShowCalendar(true)}
+            onClick={handleCalendarOpen}
             className="p-3 rounded-xl bg-white shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
           >
             <CalendarIcon size={22} className="text-blue-600" />
@@ -138,9 +167,7 @@ const Home = () => {
         {/* Umumiy nasiya */}
         <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl p-6 shadow-lg">
           <div className="text-center">
-            <div className="text-3xl font-bold mb-2">
-              {isLoadingMonthTotal ? 'Yuklanmoqda...' : errorMonthTotal ? 'Xato' : `${totalDebtData?.toLocaleString('uz-UZ')} so'm`}
-            </div>
+            <div className="text-3xl font-bold mb-2">{allTotalDebt?.toLocaleString("uz-UZ") || "0"} so'm</div>
             <div className="flex items-center justify-center gap-2 text-emerald-100">
               <span className="text-sm font-medium">Umumiy nasiya</span>
               <button className="p-1 rounded-full hover:bg-white/20 transition-colors">
@@ -150,7 +177,8 @@ const Home = () => {
           </div>
           <div className="mt-4 flex justify-center">
             <div className="flex items-center gap-1 text-emerald-100 text-xs">
-              <TrendingUp size={14} /><span>+12% o'sish</span>
+              <TrendingUp size={14} />
+              <span>+12% o'sish</span>
             </div>
           </div>
         </div>
@@ -164,12 +192,9 @@ const Home = () => {
               </div>
               <div className="text-sm text-gray-600 font-medium">Kechiktirilgan</div>
             </div>
-            <div className="text-2xl font-bold text-red-600">
-              {isLoadinglateDebtors ? '...' : errorlateDebtors ? 'Xato' : lateDebtors?.lateDebtorsCount || 0}
-            </div>
+            <div className="text-2xl font-bold text-red-600">{lateDebtorsCount?.lateDebtorsCount || "0"}</div>
             <div className="text-xs text-gray-500 mt-1">to'lovlar</div>
           </div>
-
           <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 bg-blue-100 rounded-xl">
@@ -177,9 +202,7 @@ const Home = () => {
               </div>
               <div className="text-sm text-gray-600 font-medium">Mijozlar</div>
             </div>
-            <div className="text-2xl font-bold text-blue-600">
-              {isLoadingAllCustomersCount ? '...' : errorAllCustomersCount ? 'Xato' : allCustomersCount} {/* Corrected: Displaying count directly */}
-            </div>
+            <div className="text-2xl font-bold text-blue-600">{allDebtorsCount || "0"}</div>
             <div className="text-xs text-gray-500 mt-1">faol mijoz</div>
           </div>
         </div>
@@ -192,12 +215,11 @@ const Home = () => {
               <Wallet className="text-purple-600" size={22} />
             </div>
           </div>
-
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1">
               <div className="text-sm text-gray-500 mb-1">Hisobingizda</div>
               <div className="text-2xl font-bold text-gray-800">
-                {isLoadingSeller ? 'Yuklanmoqda...' : errorSeller ? 'Xato' : `${seller?.wallet?.toLocaleString('uz-UZ')} so'm`}
+                {sellerData?.wallet?.toLocaleString("uz-UZ") || "0"} so'm
               </div>
             </div>
             <button
@@ -207,7 +229,6 @@ const Home = () => {
               <Plus size={22} />
             </button>
           </div>
-
           <div className="border-t border-gray-100 pt-4">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Bu oy uchun to'lov:</span>
@@ -218,9 +239,35 @@ const Home = () => {
             </div>
           </div>
         </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-3 gap-3">
+          <button className="bg-white rounded-xl p-4 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-200 hover:scale-105">
+            <div className="text-center">
+              <div className="p-2 bg-blue-100 rounded-xl mx-auto w-fit mb-2">
+                <Plus className="text-blue-600" size={18} />
+              </div>
+              <div className="text-xs font-medium text-gray-700">Yangi</div>
+            </div>
+          </button>
+          <button className="bg-white rounded-xl p-4 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-200 hover:scale-105">
+            <div className="text-center">
+              <div className="p-2 bg-green-100 rounded-xl mx-auto w-fit mb-2">
+                <TrendingUp className="text-green-600" size={18} />
+              </div>
+              <div className="text-xs font-medium text-gray-700">Hisobot</div>
+            </div>
+          </button>
+          <button className="bg-white rounded-xl p-4 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-200 hover:scale-105">
+            <div className="text-center">
+              <div className="p-2 bg-purple-100 rounded-xl mx-auto w-fit mb-2">
+                <Users className="text-purple-600" size={18} />
+              </div>
+              <div className="text-xs font-medium text-gray-700">Mijozlar</div>
+            </div>
+          </button>
+        </div>
       </div>
     </div>
-  );
-};
-
-export default Home;
+  )
+}

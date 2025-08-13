@@ -1,7 +1,6 @@
 "use client"
-
 import { ChevronLeft, ChevronRight, ArrowLeft, TrendingUp, Clock, CheckCircle } from "lucide-react"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useCalendarData } from "../hooks/calendar-date"
 
 interface PaymentData {
@@ -46,7 +45,17 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
   const [selectedDate, setSelectedDate] = useState(new Date().getDate())
 
-  const { data, isLoading, isError, error } = useCalendarData()
+  const { data, isLoading, isError, error, refetch } = useCalendarData()
+
+  // Kalendar ochilganda ma'lumotlarni yangilash
+  useEffect(() => {
+    refetch()
+  }, [refetch])
+
+  // Oy o'zgarganda ham ma'lumotlarni yangilash
+  useEffect(() => {
+    refetch()
+  }, [currentMonth, currentYear, refetch])
 
   const months = [
     "Yanvar",
@@ -135,23 +144,24 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
         // Debtorni topish
         const debtor = monthTotal.debtors.find((d) => d.id === paymentDate.debtorId)
         if (debtor) {
-          // Bu paymentDay bilan mos keladigan borrowedProduct topish
+          // Bu paymentDay bilan mos keladigan borrowedProduct topish va totalAmount > 0 tekshirish
           const matchedProduct = debtor.borrowedProducts.find((bp) => {
             const termDateObj = new Date(bp.term)
             const termDateStr = `${termDateObj.getUTCFullYear()}-${String(termDateObj.getUTCMonth() + 1).padStart(2, "0")}-${String(termDateObj.getUTCDate()).padStart(2, "0")}`
-            return termDateStr === paymentDateStr
+            return termDateStr === paymentDateStr && bp.totalAmount > 0 // totalAmount > 0 shartini qo'shish
           })
 
-          const amount = matchedProduct ? matchedProduct.monthPayment : debtor.totalDebt
-
-          payments.push({
-            id: debtor.id,
-            name: debtor.name,
-            amount: `UZS ${amount.toLocaleString("uz-UZ")}`,
-            date: paymentDate.paymentDay,
-            status: "pending",
-            paymentKey: `${debtor.id}-${paymentDate.paymentDay}-${idx}`,
-          })
+          // Faqat faol borrowedProduct bo'lsa to'lovni ko'rsatish
+          if (matchedProduct) {
+            payments.push({
+              id: debtor.id,
+              name: debtor.name,
+              amount: `UZS ${matchedProduct.monthPayment.toLocaleString("uz-UZ")}`,
+              date: paymentDate.paymentDay,
+              status: "pending",
+              paymentKey: `${debtor.id}-${paymentDate.paymentDay}-${idx}`,
+            })
+          }
         }
       }
     })
@@ -173,7 +183,21 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
         data?.monthTotal?.paymentDate.some((paymentDate: PaymentDate) => {
           const paymentDateObj = new Date(paymentDate.paymentDay)
           const paymentDateStr = `${paymentDateObj.getUTCFullYear()}-${String(paymentDateObj.getUTCMonth() + 1).padStart(2, "0")}-${String(paymentDateObj.getUTCDate()).padStart(2, "0")}`
-          return paymentDateStr === dateStr
+
+          if (paymentDateStr === dateStr) {
+            // Debtorni topish va faol borrowedProduct borligini tekshirish
+            const debtor = data.monthTotal.debtors.find((d:any) => d.id === paymentDate.debtorId)
+            if (debtor) {
+              // Bu paymentDay bilan mos keladigan va totalAmount > 0 bo'lgan borrowedProduct borligini tekshirish
+              const hasActiveProduct = debtor.borrowedProducts.some((bp:any) => {
+                const termDateObj = new Date(bp.term)
+                const termDateStr = `${termDateObj.getUTCFullYear()}-${String(termDateObj.getUTCMonth() + 1).padStart(2, "0")}-${String(termDateObj.getUTCDate()).padStart(2, "0")}`
+                return termDateStr === paymentDateStr && bp.totalAmount > 0
+              })
+              return hasActiveProduct
+            }
+          }
+          return false
         }) || false
 
       const isSelected = day === selectedDate
@@ -186,14 +210,15 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
         <button
           key={day}
           onClick={() => setSelectedDate(day)}
-          className={`relative h-14 w-full rounded-2xl flex items-center justify-center text-sm font-semibold transition-all duration-300 ${isSelected
+          className={`relative h-14 w-full rounded-2xl flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
+            isSelected
               ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg scale-105"
               : isToday
                 ? "bg-gradient-to-br from-purple-100 to-purple-200 text-purple-700 border-2 border-purple-300"
                 : hasPayment
                   ? "bg-gradient-to-br from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200"
                   : "hover:bg-gray-100 text-gray-700 hover:scale-105"
-            }`}
+          }`}
         >
           {day}
           {hasPayment && !isSelected && (
@@ -314,12 +339,13 @@ const Calendar = ({ onBack }: { onBack: () => void }) => {
                     </div>
                   </div>
                   <div
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${payment.status === "completed"
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      payment.status === "completed"
                         ? "bg-green-200 text-green-800"
                         : payment.status === "overdue"
                           ? "bg-red-200 text-red-800"
                           : "bg-orange-200 text-orange-800"
-                      }`}
+                    }`}
                   >
                     {payment.status === "completed"
                       ? "Bajarildi"
