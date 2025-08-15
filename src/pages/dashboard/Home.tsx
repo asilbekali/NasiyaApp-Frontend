@@ -266,34 +266,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          {/* Quick Actions */}
-          <div className="grid grid-cols-3 gap-3">
-            <button className="bg-white rounded-xl p-4 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-200 hover:scale-105">
-              <div className="text-center">
-                <div className="p-2 bg-blue-100 rounded-xl mx-auto w-fit mb-2">
-                  <Plus className="text-blue-600" size={18} />
-                </div>
-                <div className="text-xs font-medium text-gray-700">Yangi</div>
-              </div>
-            </button>
-            <button className="bg-white rounded-xl p-4 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-200 hover:scale-105">
-              <div className="text-center">
-                <div className="p-2 bg-green-100 rounded-xl mx-auto w-fit mb-2">
-                  <TrendingUp className="text-green-600" size={18} />
-                </div>
-                <div className="text-xs font-medium text-gray-700">Hisobot</div>
-              </div>
-            </button>
-            <button className="bg-white rounded-xl p-4 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-200 hover:scale-105">
-              <div className="text-center">
-                <div className="p-2 bg-purple-100 rounded-xl mx-auto w-fit mb-2">
-                  <Users className="text-purple-600" size={18} />
-                </div>
-                <div className="text-xs font-medium text-gray-700">Mijozlar</div>
-              </div>
-            </button>
-          </div>
         </div>
       </div>
 

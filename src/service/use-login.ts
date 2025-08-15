@@ -43,13 +43,13 @@ export const fetchAllCustomers = async (token?: string) => {
   return response.data.length
 }
 
-// token parametrini qo'shdim
+// token parametrini to'g'riladim - string bo'lishi kerak
 export const fetchingAllDEbtsTotal = async (token?: string) => {
   const response = await instance().get("/seller/all-total-debt-price")
   return response.data.totalDebtPrice
 }
 
-// token parametrini to'g'riladim - string bo'lishi kerak
+// token parametrini qo'shdim
 export const fetchSeller = async (token?: string) => {
   const response = await instance().get("/seller/dates")
   return response.data
@@ -241,6 +241,30 @@ export interface PaymentResponse {
   remainingMonths: number
 }
 
+export interface ReportData {
+  id: number
+  message: string
+  sent: boolean
+  sellerId: number
+  debtorId: number
+  createAt: string
+  to: {
+    name: string
+  }
+}
+
+export interface PaymentHistoryData {
+  debtorId: number
+  debtorName: string
+  paymentHistories: Array<{
+    paymentId: number
+    borrowedProductId: number
+    borrowedProductName: string
+    amountPaid: number
+    paidAt: string
+  }>
+}
+
 // Create borrowed product with images
 export const createBorrowedProduct = async (data: {
   productName: string
@@ -326,6 +350,17 @@ export const payMultipleMonths = async (data: {
   borrowedProductId: number
   monthsToPay: number
 }) => {
-  const response = await instance().post("/payment-section/pay-multiple-months", data)
+  const response = await instance().post("/payment-section/multi-month-pay", data)
+  return response.data
+}
+
+// Reports API function
+export const fetchReports = async () => {
+  const response = await instance().get("/sen-message-debtor")
+  return response.data
+}
+
+export const fetchPaymentHistory = async () => {
+  const response = await instance().get("/product-history")
   return response.data
 }
