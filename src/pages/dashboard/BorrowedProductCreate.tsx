@@ -174,9 +174,8 @@ export default function BorrowedProductCreate() {
               name="productName"
               value={form.productName}
               placeholder="Masalan: iPhone 15, Televizor"
-              className={`w-full border-2 ${
-                errors.productName ? "border-red-300" : "border-gray-200"
-              } rounded-lg sm:rounded-xl p-3 sm:p-4 focus:border-blue-500 focus:outline-none transition-colors text-sm sm:text-base`}
+              className={`w-full border-2 ${errors.productName ? "border-red-300" : "border-gray-200"
+                } rounded-lg sm:rounded-xl p-3 sm:p-4 focus:border-blue-500 focus:outline-none transition-colors text-sm sm:text-base`}
               onChange={handleChange}
             />
             {errors.productName && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.productName}</p>}
@@ -193,9 +192,8 @@ export default function BorrowedProductCreate() {
               name="term"
               value={form.term}
               min={new Date().toISOString().split("T")[0]}
-              className={`w-full border-2 ${
-                errors.term ? "border-red-300" : "border-gray-200"
-              } rounded-lg sm:rounded-xl p-3 sm:p-4 focus:border-blue-500 focus:outline-none transition-colors text-sm sm:text-base`}
+              className={`w-full border-2 ${errors.term ? "border-red-300" : "border-gray-200"
+                } rounded-lg sm:rounded-xl p-3 sm:p-4 focus:border-blue-500 focus:outline-none transition-colors text-sm sm:text-base`}
               onChange={handleChange}
             />
             {errors.term && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.term}</p>}
@@ -212,9 +210,8 @@ export default function BorrowedProductCreate() {
               name="totalAmount"
               value={form.totalAmount}
               placeholder="1000000"
-              className={`w-full border-2 ${
-                errors.totalAmount ? "border-red-300" : "border-gray-200"
-              } rounded-lg sm:rounded-xl p-3 sm:p-4 focus:border-blue-500 focus:outline-none transition-colors text-sm sm:text-base`}
+              className={`w-full border-2 ${errors.totalAmount ? "border-red-300" : "border-gray-200"
+                } rounded-lg sm:rounded-xl p-3 sm:p-4 focus:border-blue-500 focus:outline-none transition-colors text-sm sm:text-base`}
               onChange={handleChange}
             />
             {errors.totalAmount && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.totalAmount}</p>}
@@ -312,7 +309,7 @@ export default function BorrowedProductCreate() {
               whileTap={{ scale: 0.98 }}
               onClick={handleSubmit}
               disabled={createMutation.isPending || uploadMutation.isPending}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation"
+              className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-3 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation"
             >
               {createMutation.isPending ? (
                 <>

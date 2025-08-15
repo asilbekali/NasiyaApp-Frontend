@@ -97,7 +97,7 @@ export default function DebtorAbout() {
           className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6"
         >
           <div className="flex items-center mb-4">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-lg sm:text-2xl font-bold">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white text-lg sm:text-2xl font-bold">
               {debtor.name.charAt(0).toUpperCase()}
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
@@ -157,7 +157,7 @@ export default function DebtorAbout() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 text-white"
+          className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 text-white"
         >
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
@@ -248,7 +248,7 @@ export default function DebtorAbout() {
         animate={{ scale: 1 }}
         transition={{ delay: 0.5, type: "spring" }}
         onClick={() => navigate(`/borrowed-product/create?debtorId=${debtor.id}`)}
-        className="fixed mb-[8px] bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-full shadow-xl flex items-center gap-2 hover:shadow-2xl hover:scale-105 transition-all duration-5 touch-manipulation text-sm sm:text-base"
+        className="fixed mb-[8px] bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-full shadow-xl flex items-center gap-2 hover:shadow-2xl hover:scale-105 transition-all duration-5 touch-manipulation text-sm sm:text-base"
       >
         <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
         <span className="font-semibold ">Nasiya yaratish</span>
