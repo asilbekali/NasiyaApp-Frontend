@@ -68,4 +68,9 @@ export const DashboardRouteList = [
         path: PATH.settings,
         element: <Settings />,
     },
+    {
+        id: 10,
+        path: PATH.main,
+        element: <Home/>,
+    },
 ]
