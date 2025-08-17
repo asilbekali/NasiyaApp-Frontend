@@ -119,9 +119,8 @@ const Chat = () => {
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.isSent ? "justify-end" : "justify-start"}`}>
             <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                msg.isSent ? "bg-blue-500 text-white rounded-br-md" : "bg-gray-200 text-gray-900 rounded-bl-md"
-              }`}
+              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${msg.isSent ? "bg-blue-500 text-white rounded-br-md" : "bg-gray-200 text-gray-900 rounded-bl-md"
+                }`}
             >
               <p className="text-sm">{msg.text}</p>
               <p className={`text-xs mt-1 ${msg.isSent ? "text-blue-100" : "text-gray-500"}`}>{msg.timestamp}</p>
@@ -137,8 +136,15 @@ const Chat = () => {
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
       >
         <div className="flex items-center space-x-2">
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <Smile size={20} className="text-gray-500" />
+          <button className="p-2">
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
+            </svg>
           </button>
 
           <div className="flex-1 relative">
@@ -157,11 +163,10 @@ const Chat = () => {
           <button
             onClick={handleSendMessage}
             disabled={!message.trim()}
-            className={`p-2 rounded-full transition-all ${
-              message.trim()
+            className={`p-2 rounded-full transition-all ${message.trim()
                 ? "bg-blue-500 text-white hover:bg-blue-600"
                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
-            }`}
+              }`}
           >
             <Send size={18} />
           </button>
