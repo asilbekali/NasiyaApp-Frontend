@@ -15,18 +15,15 @@ const Reports = () => {
     const navigate = useNavigate()
     const [activeTab, setActiveTab] = useState<"messages" | "payments">("messages")
 
-    // Payment History query
-    const {
-        data: paymentHistory,
-        isLoading: paymentsLoading,
-        error: paymentsError,
-    } = useQuery<PaymentHistoryData[]>({
-        queryKey: ["paymentHistory"],
-        queryFn: fetchPaymentHistory,
-        enabled: activeTab === "payments",
-    })
+    // Payment History
+    const { data: paymentHistory, isLoading: paymentsLoading, error: paymentsError } =
+        useQuery<PaymentHistoryData[]>({
+            queryKey: ["paymentHistory"],
+            queryFn: fetchPaymentHistory,
+            enabled: activeTab === "payments",
+        })
 
-    // Debtor IDs from payment history
+    // Debtor IDs
     const debtorIds = paymentHistory?.map((debtor) => debtor.debtorId) || []
 
     // Fetch debtor details
@@ -40,22 +37,18 @@ const Reports = () => {
         enabled: activeTab === "payments" && debtorIds.length > 0,
     })
 
-    // Helper function for phone number
     const getDebtorPhoneNumber = (debtorId: number): string => {
         const debtor = debtorsData?.find((d) => d.id === debtorId)
         return debtor?.debtroPhoneNumber?.[0]?.number || "+998 91 123 4567"
     }
 
     // Reports query
-    const {
-        data: reports,
-        isLoading: reportsLoading,
-        error: reportsError,
-    } = useQuery<ReportData[]>({
-        queryKey: ["reports"],
-        queryFn: fetchReports,
-        enabled: activeTab === "messages",
-    })
+    const { data: reports, isLoading: reportsLoading, error: reportsError } =
+        useQuery<ReportData[]>({
+            queryKey: ["reports"],
+            queryFn: fetchReports,
+            enabled: activeTab === "messages",
+        })
 
     const handleDebtorClick = (debtorId: number, debtorName: string) => {
         navigate(`/debtorchat/${debtorId}`, { state: { debtorName } })
@@ -80,22 +73,17 @@ const Reports = () => {
         )
     }
 
+    // faqat unique debtorlar chiqishi uchun Map ishlatamiz
+    const uniqueDebtors = reports
+        ? Array.from(new Map(reports.map((r) => [r.debtorId, r])).values())
+        : []
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
             <div className="bg-white px-4 py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-semibold text-gray-900">Hisobot</h1>
-                    <button className="p-2">
-                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                            />
-                        </svg>
-                    </button>
                 </div>
             </div>
 
@@ -105,19 +93,21 @@ const Reports = () => {
                     <div className="flex bg-gray-100 rounded-lg p-1 max-w-sm w-full">
                         <button
                             onClick={() => setActiveTab("messages")}
-                            className={`flex-1 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md ${activeTab === "messages"
-                                ? "bg-blue-500 text-white shadow-sm"
-                                : "text-gray-600 hover:text-gray-800 hover:bg-gray-200"
-                                }`}
+                            className={`flex-1 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md ${
+                                activeTab === "messages"
+                                    ? "bg-blue-500 text-white shadow-sm"
+                                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-200"
+                            }`}
                         >
                             Xabarlar tarixi
                         </button>
                         <button
                             onClick={() => setActiveTab("payments")}
-                            className={`flex-1 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md ${activeTab === "payments"
-                                ? "bg-blue-500 text-white shadow-sm"
-                                : "text-gray-600 hover:text-gray-800 hover:bg-gray-200"
-                                }`}
+                            className={`flex-1 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md ${
+                                activeTab === "payments"
+                                    ? "bg-blue-500 text-white shadow-sm"
+                                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-200"
+                            }`}
                         >
                             To'lovlar tarixi
                         </button>
@@ -127,8 +117,8 @@ const Reports = () => {
 
             {/* Content */}
             <div className="px-4 py-2">
-                {activeTab === "messages" && reports && reports.length > 0 ? (
-                    reports.map((report) => (
+                {activeTab === "messages" && uniqueDebtors.length > 0 ? (
+                    uniqueDebtors.map((report) => (
                         <div
                             key={report.id}
                             onClick={() => handleDebtorClick(report.debtorId, report.to.name)}
@@ -157,7 +147,10 @@ const Reports = () => {
                     paymentHistory.map((debtor) => (
                         <div key={debtor.debtorId} className="mb-4">
                             {debtor.paymentHistories.map((payment) => (
-                                <div key={payment.paymentId} className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100">
+                                <div
+                                    key={payment.paymentId}
+                                    className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100"
+                                >
                                     <div className="flex items-center justify-between">
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between mb-1">
@@ -173,7 +166,9 @@ const Reports = () => {
                                             <p className="text-sm text-gray-600">{getDebtorPhoneNumber(debtor.debtorId)}</p>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-lg font-semibold text-gray-900">-{payment.amountPaid.toLocaleString()} </div>
+                                            <div className="text-lg font-semibold text-gray-900">
+                                                -{payment.amountPaid.toLocaleString()}{" "}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -193,9 +188,3 @@ const Reports = () => {
 }
 
 export default Reports
-
-
-
-
-
-
