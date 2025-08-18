@@ -1,4 +1,5 @@
 import { Home } from "../pages"
+import AllDebtors from "../pages/dashboard/AllDebtors"
 import BorrowedProductabout from "../pages/dashboard/BorrowedProductabout"
 import BorrowedProductCreate from "../pages/dashboard/BorrowedProductCreate"
 import Chat from "../pages/dashboard/Chat"
@@ -21,7 +22,8 @@ export const PATH = {
     reports: "/reports",
     debtorChat: "/debtorchat/:id",
     settings: "/settings",
-    MessageSample: "/messageSample"
+    MessageSample: "/messageSample",
+    allDebtors: "/allDebtors"
 }
 
 export const DashboardRouteList = [
@@ -79,5 +81,10 @@ export const DashboardRouteList = [
         id: 11,
         path: PATH.MessageSample,
         element: <MessageSample />,
+    },
+    {
+        id: 12,
+        path: PATH.allDebtors,
+        element: <AllDebtors />,
     },
 ]
