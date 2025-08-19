@@ -6,7 +6,7 @@ const cookies = new Cookies();
 export const instance = () => {
     const token = cookies.get("token");
     return axios.create({
-        baseURL: "http://18.159.45.32/",
+        baseURL: "http://13.233.230.148/",
         headers: {
             "Content-Type": "application/json",
             ...(token && { Authorization: `Bearer ${token}` }),

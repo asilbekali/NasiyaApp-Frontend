@@ -115,7 +115,7 @@ export const uploadImage = async (file: File) => {
     // API to'g'ridan-to'g'ri file manzilini qaytarsa, uni to'liq URL bilan qaytaramiz
     if (response.data?.url) {
         return {
-            url: `http://18.159.45.32/${response.data.url}`,
+            url: `http://13.233.230.148/${response.data.url}`,
             path: response.data.url, // agar keyinchalik path kerak bo'lsa
         };
     }

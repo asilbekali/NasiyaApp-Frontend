@@ -25,7 +25,6 @@ interface Sample {
 }
 
 const { Title, Text } = Typography;
-
 const API_URL = "/message-sample";
 
 const MessageSample: React.FC = () => {
@@ -95,14 +94,14 @@ const MessageSample: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex justify-center items-start bg-gray-50 p-4">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Card className="rounded-2xl shadow-lg" bodyStyle={{ padding: "16px" }}>
+        <Card className="rounded-2xl shadow-lg hover:shadow-2xl transition-shadow" bodyStyle={{ padding: "16px" }}>
           {/* Header */}
           <Space align="center" className="mb-4">
             <Button
@@ -151,16 +150,17 @@ const MessageSample: React.FC = () => {
               >
                 <List
                   dataSource={samples}
-                  renderItem={(sample) => (
+                  renderItem={(sample, index) => (
                     <motion.div
                       key={sample.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
+                      initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ duration: 0.2 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      whileHover={{ scale: 1.03, y: -2 }}
+                      transition={{ duration: 0.2, delay: index * 0.05 }}
                     >
                       <List.Item
-                        className="rounded-lg shadow-sm hover:shadow-md hover:bg-gray-100 transition cursor-pointer"
+                        className="rounded-lg shadow-sm hover:shadow-lg hover:bg-gray-100 transition-colors cursor-pointer"
                         actions={[
                           <Button
                             type="text"
@@ -201,10 +201,11 @@ const MessageSample: React.FC = () => {
           <AnimatePresence>
             {showForm && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                key="form"
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
+                exit={{ opacity: 0, y: 30 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
                 className="mt-4"
               >
                 <Text strong>Namuna</Text>
@@ -233,11 +234,13 @@ const MessageSample: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.2 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <Button
                 type="primary"
                 block
-                className="mt-6 rounded-lg hover:scale-105 transition-transform"
+                className="mt-6 rounded-lg"
                 icon={<PlusOutlined />}
                 onClick={() => setShowForm(true)}
               >

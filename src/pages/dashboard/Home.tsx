@@ -119,7 +119,7 @@ export default function Home() {
     }
 
     // Agar faqat fayl nomi bo'lsa
-    return `http://18.159.45.32/multer/${imagePath}`
+    return `http://13.233.230.148/multer/${imagePath}`
   }
 
   if (showCalendar) {

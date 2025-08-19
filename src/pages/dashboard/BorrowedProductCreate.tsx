@@ -256,7 +256,7 @@ export default function BorrowedProductCreate() {
                     className="relative aspect-square rounded-lg sm:rounded-xl overflow-hidden shadow-md"
                   >
                     <img
-                      src={`http://18.159.45.32/multer/${imagePath}`}
+                      src={`http://13.233.230.148/multer/${imagePath}`}
                       alt={`Mahsulot rasmi ${index + 1}`}
                       className="w-full h-full object-cover"
                       onError={(e) => {

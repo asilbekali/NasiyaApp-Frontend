@@ -23,7 +23,7 @@ const Login = () => {
     onSubmit: async (data) => {
       setPenning(true);
       try {
-        const response = await axios.post('http://18.159.45.32/seller/login', {
+        const response = await axios.post('http://13.233.230.148/seller/login', {
           email: data.username,
           password: data.password
         });
@@ -34,11 +34,11 @@ const Login = () => {
           const token = response.data?.accesToken;
 
           if (token) {
-            setCookie("token", token, { path: "/", maxAge: 60 * 60 * 24 }); 
+            setCookie("token", token, { path: "/", maxAge: 60 * 60 * 24 });
           }
 
           toast.success("Muvaffaqiyatli tizimga kirdingiz!");
-          navigate("/home"); 
+          navigate("/home");
         } else {
           toast.warning(`Status: ${statusCode} - Noma'lum javob`);
         }

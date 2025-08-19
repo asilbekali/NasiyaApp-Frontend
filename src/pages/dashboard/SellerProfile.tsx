@@ -210,7 +210,7 @@ const SellerProfileComponent: React.FC<SellerProfileProps> = ({ onBack }) => {
                     src={
                       formData.image.startsWith("http")
                         ? formData.image
-                        : `http://18.159.45.32/multer/${formData.image}`
+                        : `http://13.233.230.148/multer/${formData.image}`
                     }
                     alt="Profile"
                     className="w-full h-full object-cover"

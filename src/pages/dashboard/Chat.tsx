@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, Send } from "lucide-react"
 import { fetchReports, fetchDebtorById, sendMessageToDebtor } from "../../service/use-login"
 import axios from "axios"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface Message {
   id: string
@@ -61,9 +62,7 @@ const Chat = () => {
           }
         }) || []
 
-    // Sort by date, eski yuqorida
     debtorMessages.sort((a: Message, b: Message) => a.date.getTime() - b.date.getTime())
-
     setMessages(debtorMessages)
   }, [reportData, id])
 
@@ -73,7 +72,6 @@ const Chat = () => {
   const debtorName = debtorData?.name || reportData?.find((r: any) => r.debtorId === Number(id))?.to?.name || "Noma'lum"
   const debtorPhone = debtorData?.debtroPhoneNumber?.[0]?.number || "+998 XX XXX XXXX"
 
-  // Mutation for sending message
   const sendMutation = useMutation({
     mutationFn: sendMessageToDebtor,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["reports"] }),
@@ -100,7 +98,7 @@ const Chat = () => {
   const handleToggleSamples = async () => {
     if (!showSamples) {
       try {
-        const res = await axios.get<MessageSample[]>("http://18.159.45.32/message-sample")
+        const res = await axios.get<MessageSample[]>("http://13.233.230.148/message-sample")
         setSamples(res.data.map(item => ({ id: item.id, message: item.message })))
       } catch (err) { console.error("Failed to fetch message samples:", err) }
     }
@@ -129,42 +127,80 @@ const Chat = () => {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-28 pt-[72px]">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.isSent ? "justify-end" : "justify-start"}`}>
-            <div className={`relative max-w-xs px-4 py-2 rounded-2xl shadow-md transition-all duration-200 ${msg.isSent ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md" : "bg-white text-gray-900 rounded-bl-md border border-gray-200"}`}>
-              <p className="text-sm">{msg.text}</p>
-              <p className={`text-xs mt-1 ${msg.isSent ? "text-blue-100" : "text-gray-500"}`}>{msg.timestamp}</p>
-            </div>
-          </div>
-        ))}
+        <AnimatePresence initial={false}>
+          {messages.map((msg) => (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              className={`flex ${msg.isSent ? "justify-end" : "justify-start"}`}
+            >
+              <div className={`relative max-w-xs px-4 py-2 rounded-2xl shadow-md transition-all duration-200 ${msg.isSent ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md" : "bg-white text-gray-900 rounded-bl-md border border-gray-200"}`}>
+                <p className="text-sm">{msg.text}</p>
+                <p className={`text-xs mt-1 ${msg.isSent ? "text-blue-100" : "text-gray-500"}`}>{msg.timestamp}</p>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
         <div ref={messagesEndRef} />
       </div>
 
       {/* Message Samples */}
-      {showSamples && (
-        <div className="fixed bottom-20 left-4 right-4 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-xl p-3 z-20">
-          <div className="text-xs font-medium text-gray-500 mb-2 px-1">Tez xabarlar</div>
-          <div className="space-y-2">
-            {samples.map((s) => (
-              <button key={s.id} onClick={() => handleSelectSample(s)} className="w-full text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition">
-                {s.message}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showSamples && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed bottom-20 left-4 right-4 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-xl p-3 z-20"
+          >
+            <div className="text-xs font-medium text-gray-500 mb-2 px-1">Tez xabarlar</div>
+            <div className="space-y-2">
+              {samples.map((s) => (
+                <motion.button
+                  key={s.id}
+                  onClick={() => handleSelectSample(s)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full text-left px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition"
+                >
+                  {s.message}
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Input */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex items-center space-x-2" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}>
-        <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} onKeyPress={handleKeyPress} placeholder="Xabar yozing..." className="flex-1 px-4 py-2 bg-gray-100 rounded-full border-none outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all" />
-        <button className="p-2 rounded-full hover:bg-gray-100 transition" onClick={handleToggleSamples}>
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Xabar yozing..."
+          className="flex-1 px-4 py-2 bg-gray-100 rounded-full border-none outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+        />
+        <button
+          className="p-2 rounded-full hover:bg-gray-100 transition"
+          onClick={handleToggleSamples}
+        >
           <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
         </button>
-        <button onClick={handleSendMessage} disabled={!message.trim()} className={`p-2 rounded-full transition-all ${message.trim() ? "bg-blue-500 text-white hover:bg-blue-600" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}>
+        <motion.button
+          onClick={handleSendMessage}
+          disabled={!message.trim()}
+          whileTap={{ scale: 0.95 }}
+          className={`p-2 rounded-full transition-all ${message.trim() ? "bg-blue-500 text-white hover:bg-blue-600" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
+        >
           <Send size={18} />
-        </button>
+        </motion.button>
       </div>
     </div>
   )

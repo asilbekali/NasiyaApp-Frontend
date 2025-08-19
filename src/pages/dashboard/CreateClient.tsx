@@ -275,7 +275,7 @@ const CreateClient = () => {
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       whileHover={{ scale: 1.05 }}
-                      src={`http://18.159.45.32/${url}`}
+                      src={`http://13.233.230.148/${url}`}
                       alt={`uploaded-${i}`}
                       className="w-24 h-24 object-cover rounded-2xl border-2 border-slate-200 hover:border-pink-300 transition-all duration-300 cursor-pointer"
                     />

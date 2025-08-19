@@ -513,10 +513,10 @@ const BorrowedProductAbout: React.FC = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="relative group cursor-pointer touch-manipulation"
-                      onClick={() => setSelectedImage(`http://18.159.45.32/multer/${img.image}`)}
+                      onClick={() => setSelectedImage(`http://13.233.230.148/multer/${img.image}`)}
                     >
                       <img
-                        src={`http://18.159.45.32/multer/${img.image}`}
+                        src={`http://13.233.230.148/multer/${img.image}`}
                         alt={`Mahsulot ${index + 1}`}
                         className="w-full h-24 sm:h-32 object-cover rounded-lg border-2 border-gray-200 group-hover:border-blue-400 transition-colors"
                         onError={(e) => {
@@ -855,15 +855,13 @@ const BorrowedProductAbout: React.FC = () => {
                       <div
                         key={i}
                         onClick={() => toggleTermSelection(i)}
-                        className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all touch-manipulation ${
-                          isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-                        }`}
+                        className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all touch-manipulation ${isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                          }`}
                       >
                         <div className="flex items-center space-x-3">
                           <div
-                            className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                              isSelected ? "border-blue-500 bg-blue-500" : "border-gray-300"
-                            }`}
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center ${isSelected ? "border-blue-500 bg-blue-500" : "border-gray-300"
+                              }`}
                           >
                             {isSelected && <Check className="w-3 h-3 text-white" />}
                           </div>
