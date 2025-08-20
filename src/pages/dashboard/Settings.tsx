@@ -4,6 +4,10 @@ import { useCookies } from "react-cookie"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 
+
+
+
+
 const Settings = () => {
   const [, , removeCookie] = useCookies(["token"])
   const navigate = useNavigate()
